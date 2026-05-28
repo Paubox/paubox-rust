@@ -1,14 +1,19 @@
 //! Core client: credential storage and shared HTTP transport.
 
+#[cfg(feature = "email")]
 use std::env;
+#[cfg(feature = "email")]
 use url::Url;
 
+#[cfg(feature = "email")]
 use crate::error::PauboxError;
 
-#[cfg(feature = "forms")]
+#[cfg(all(feature = "email", feature = "forms"))]
 use crate::forms::FormsClient;
 
+#[cfg(feature = "email")]
 const DEFAULT_EMAIL_BASE: &str = "https://api.paubox.net/v1/";
+#[cfg(feature = "forms")]
 const DEFAULT_FORMS_BASE: &str = "https://apx.paubox.com/forms";
 
 /// Client for the Paubox Email API.
@@ -22,6 +27,7 @@ const DEFAULT_FORMS_BASE: &str = "https://apx.paubox.com/forms";
 ///
 /// let client = PauboxClient::new("my-api-key", "my-api-user");
 /// ```
+#[cfg(feature = "email")]
 #[derive(Debug, Clone)]
 pub struct PauboxClient {
     pub(crate) api_key: String,
@@ -30,6 +36,7 @@ pub struct PauboxClient {
     pub(crate) base_url: Url,
 }
 
+#[cfg(feature = "email")]
 impl PauboxClient {
     /// Create a new client with the given API key and API user (endpoint name).
     ///
@@ -105,6 +112,7 @@ impl PauboxClient {
 ///     .build()
 ///     .unwrap();
 /// ```
+#[cfg(feature = "email")]
 #[derive(Debug, Default)]
 pub struct PauboxClientBuilder {
     api_key: Option<String>,
@@ -113,6 +121,7 @@ pub struct PauboxClientBuilder {
     timeout: Option<std::time::Duration>,
 }
 
+#[cfg(feature = "email")]
 impl PauboxClientBuilder {
     /// Set the API key.
     pub fn api_key(mut self, key: impl Into<String>) -> Self {
@@ -171,6 +180,7 @@ impl PauboxClientBuilder {
 }
 
 /// Return env var value or `PauboxError::EnvVar` if absent/empty.
+#[cfg(feature = "email")]
 pub(crate) fn env_required(name: &str) -> Result<String, PauboxError> {
     env::var(name)
         .ok()
@@ -179,4 +189,5 @@ pub(crate) fn env_required(name: &str) -> Result<String, PauboxError> {
 }
 
 /// Default Forms base URL constant, re-exported for `FormsClient`.
+#[cfg(feature = "forms")]
 pub(crate) const FORMS_BASE_URL: &str = DEFAULT_FORMS_BASE;

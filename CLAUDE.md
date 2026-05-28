@@ -2,7 +2,7 @@
 
 ## Toolchain
 
-- **MSRV:** Rust 1.75
+- **MSRV:** Rust 1.86
 - **Edition:** 2021
 - Install: `rustup update stable`
 
@@ -68,7 +68,8 @@ cargo run --example submit_form -- <form_uuid>
 cargo check                                       # default (email + forms)
 cargo check --no-default-features --features email
 cargo check --no-default-features --features forms
-cargo check --no-default-features
+# Note: at least one feature is required. A bare `--no-default-features`
+# build is intentionally rejected by a `compile_error!` in `src/lib.rs`.
 ```
 
 ## Publishing to crates.io

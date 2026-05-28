@@ -60,11 +60,11 @@ jobs:
   # Minimum Supported Rust Version
   # -----------------------------------------------------------------------
   msrv:
-    name: MSRV (1.75)
+    name: MSRV (1.86)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.75.0
+      - uses: dtolnay/rust-toolchain@1.86.0
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --all-features
 
@@ -81,7 +81,8 @@ jobs:
       - run: cargo check
       - run: cargo check --no-default-features --features email
       - run: cargo check --no-default-features --features forms
-      - run: cargo check --no-default-features
+      # At least one feature is required; a bare --no-default-features build
+      # is intentionally rejected by a compile_error in src/lib.rs.
 
   # -----------------------------------------------------------------------
   # Documentation (catches broken intra-doc links)

@@ -2,7 +2,7 @@
 name = "paubox"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.86"
 license = "Apache-2.0"
 description = "Async Rust SDK for the Paubox Email and Forms APIs (HIPAA-compliant)"
 repository = "https://github.com/Paubox/paubox-rust"

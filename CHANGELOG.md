@@ -27,7 +27,7 @@ Initial public release.
 - `LICENSE` (Apache 2.0), `NOTICE`, `SECURITY.md`, and `CONTRIBUTING.md`
 
 ### Requirements
-- Requires Rust 1.75 or later.
+- Requires Rust 1.86 or later.
 
 [Unreleased]: https://github.com/Paubox/paubox-rust/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/Paubox/paubox-rust/releases/tag/v0.1.0

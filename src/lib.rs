@@ -70,6 +70,11 @@
 //! let client = PauboxClient::from_env().expect("credentials not set");
 //! ```
 
+#[cfg(not(any(feature = "email", feature = "forms")))]
+compile_error!(
+    "the `paubox` crate requires at least one of the `email` or `forms` features to be enabled"
+);
+
 pub mod client;
 pub mod error;
 
@@ -79,5 +84,6 @@ pub mod email;
 #[cfg(feature = "forms")]
 pub mod forms;
 
+#[cfg(feature = "email")]
 pub use client::{PauboxClient, PauboxClientBuilder};
 pub use error::PauboxError;

@@ -13,7 +13,7 @@ rustup update stable
 cargo build --all-features
 ```
 
-MSRV is **Rust 1.75**. No external services are needed to run the test suite — all tests use mocked HTTP via `wiremock`.
+MSRV is **Rust 1.86**. No external services are needed to run the test suite — all tests use mocked HTTP via `wiremock`.
 
 ## Running tests
 
@@ -46,7 +46,8 @@ cargo clippy --all-features -- -D warnings
 cargo check                                        # default (email + forms)
 cargo check --no-default-features --features email
 cargo check --no-default-features --features forms
-cargo check --no-default-features
+# At least one feature is required; a bare --no-default-features build is
+# intentionally rejected by a compile_error in src/lib.rs.
 ```
 
 ## Pull request expectations

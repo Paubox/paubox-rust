@@ -99,13 +99,11 @@ impl FormSubmissionBuilder {
     /// Returns [`PauboxError::Validation`] if `form_data` was not set or is
     /// `null`.
     pub fn build(self) -> Result<FormSubmission, PauboxError> {
-        let form_data = self.form_data.ok_or_else(|| {
-            PauboxError::Validation("form_data is required".into())
-        })?;
+        let form_data = self
+            .form_data
+            .ok_or_else(|| PauboxError::Validation("form_data is required".into()))?;
         if form_data.is_null() {
-            return Err(PauboxError::Validation(
-                "form_data must not be null".into(),
-            ));
+            return Err(PauboxError::Validation("form_data must not be null".into()));
         }
         Ok(FormSubmission {
             form_data,

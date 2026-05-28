@@ -146,7 +146,10 @@ where
         if status_u16 == 401 {
             Err(PauboxError::Auth(body))
         } else {
-            Err(PauboxError::Http { status: status_u16, body })
+            Err(PauboxError::Http {
+                status: status_u16,
+                body,
+            })
         }
     }
 }

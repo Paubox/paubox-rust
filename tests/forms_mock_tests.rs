@@ -141,7 +141,10 @@ async fn submit_form_400_returns_http_error() {
         .build()
         .unwrap();
 
-    let err = client.submit_form("test-uuid", &submission).await.unwrap_err();
+    let err = client
+        .submit_form("test-uuid", &submission)
+        .await
+        .unwrap_err();
 
     match err {
         PauboxError::Http { status, .. } => assert_eq!(status, 400),

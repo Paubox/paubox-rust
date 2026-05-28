@@ -3,10 +3,7 @@
 //! Uses `wiremock` to start a local HTTP server and verifies that the client
 //! sends correct requests and deserialises responses properly.
 
-use paubox::{
-    email::Message,
-    PauboxClient, PauboxError,
-};
+use paubox::{email::Message, PauboxClient, PauboxError};
 use wiremock::matchers::{header, method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 

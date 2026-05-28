@@ -144,12 +144,12 @@ impl PauboxClientBuilder {
     /// Returns [`PauboxError::Validation`] if `api_key` or `api_user` were not
     /// set, or [`PauboxError::Url`] if the base URL cannot be constructed.
     pub fn build(self) -> Result<PauboxClient, PauboxError> {
-        let api_key = self.api_key.ok_or_else(|| {
-            PauboxError::Validation("api_key is required".into())
-        })?;
-        let api_user = self.api_user.ok_or_else(|| {
-            PauboxError::Validation("api_user is required".into())
-        })?;
+        let api_key = self
+            .api_key
+            .ok_or_else(|| PauboxError::Validation("api_key is required".into()))?;
+        let api_user = self
+            .api_user
+            .ok_or_else(|| PauboxError::Validation("api_user is required".into()))?;
 
         let base_url = match self.base_url {
             Some(u) => u,
@@ -160,11 +160,13 @@ impl PauboxClientBuilder {
         if let Some(t) = self.timeout {
             builder = builder.timeout(t);
         }
-        let http = builder
-            .build()
-            .map_err(PauboxError::Request)?;
+        let http = builder.build().map_err(PauboxError::Request)?;
 
-        Ok(PauboxClient { api_key, http, base_url })
+        Ok(PauboxClient {
+            api_key,
+            http,
+            base_url,
+        })
     }
 }
 

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Paubox/paubox-rust/security/policy
+    about: Please report security issues privately to security@paubox.com — do not open a public issue.
+  - name: Paubox support
+    url: https://www.paubox.com/support
+    about: For account, billing, or general product questions.

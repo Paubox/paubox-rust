@@ -5,9 +5,15 @@ edition = "2021"
 rust-version = "1.75"
 license = "Apache-2.0"
 description = "Async Rust SDK for the Paubox Email and Forms APIs (HIPAA-compliant)"
-repository = "https://github.com/paubox/paubox-rust"
+repository = "https://github.com/Paubox/paubox-rust"
+homepage = "https://www.paubox.com"
+documentation = "https://docs.rs/paubox"
+readme = "README.md"
 keywords = ["paubox", "email", "hipaa", "forms", "healthcare"]
 categories = ["email", "api-bindings", "web-programming::http-client"]
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = ["email", "forms"]

@@ -11,9 +11,7 @@ use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let form_id = env::args()
-        .nth(1)
-        .expect("Usage: get_form <form_uuid>");
+    let form_id = env::args().nth(1).expect("Usage: get_form <form_uuid>");
 
     let client = FormsClient::new();
 
@@ -29,7 +27,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Description:      {desc}");
     }
     if let Some(ref schema) = form.form_json {
-        println!("Schema fields:    {}", serde_json::to_string_pretty(schema)?);
+        println!(
+            "Schema fields:    {}",
+            serde_json::to_string_pretty(schema)?
+        );
     }
 
     Ok(())

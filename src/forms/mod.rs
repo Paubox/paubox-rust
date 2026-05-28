@@ -182,6 +182,9 @@ where
     } else {
         let status_u16 = status.as_u16();
         let body = resp.text().await.unwrap_or_default();
-        Err(PauboxError::Http { status: status_u16, body })
+        Err(PauboxError::Http {
+            status: status_u16,
+            body,
+        })
     }
 }

@@ -9,15 +9,13 @@
 //! The example submits a hardcoded `form_data` payload; adjust the JSON to
 //! match the actual schema of your form.
 
-use paubox::forms::{FormsClient, FormSubmission};
+use paubox::forms::{FormSubmission, FormsClient};
 use serde_json::json;
 use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let form_id = env::args()
-        .nth(1)
-        .expect("Usage: submit_form <form_uuid>");
+    let form_id = env::args().nth(1).expect("Usage: submit_form <form_uuid>");
 
     let client = FormsClient::new();
 

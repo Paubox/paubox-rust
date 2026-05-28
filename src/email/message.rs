@@ -62,8 +62,7 @@ impl Message {
 
     /// Serialise this message to the JSON wire format expected by the API.
     pub(crate) fn to_wire(&self) -> serde_json::Value {
-        let mut content: serde_json::Map<String, serde_json::Value> =
-            serde_json::Map::new();
+        let mut content: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
         if let Some(ref txt) = self.text_content {
             content.insert("text/plain".into(), txt.clone().into());
         }
@@ -76,21 +75,17 @@ impl Message {
             content.insert("text/html".into(), encoded.into());
         }
 
-        let mut headers: serde_json::Map<String, serde_json::Value> =
-            serde_json::Map::new();
+        let mut headers: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
         headers.insert("subject".into(), self.subject.clone().into());
         headers.insert("from".into(), self.from.clone().into());
         if let Some(ref rt) = self.reply_to {
             headers.insert("reply-to".into(), rt.clone().into());
         }
 
-        let mut msg: serde_json::Map<String, serde_json::Value> =
-            serde_json::Map::new();
+        let mut msg: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
         msg.insert(
             "recipients".into(),
-            serde_json::Value::Array(
-                self.to.iter().map(|r| r.clone().into()).collect(),
-            ),
+            serde_json::Value::Array(self.to.iter().map(|r| r.clone().into()).collect()),
         );
         msg.insert("headers".into(), headers.into());
         msg.insert("content".into(), content.into());
@@ -282,17 +277,17 @@ impl MessageBuilder {
     /// Returns [`PauboxError::Validation`] if `from`, `to`, or `subject` are
     /// missing.
     pub fn build(self) -> Result<Message, PauboxError> {
-        let from = self.from.ok_or_else(|| {
-            PauboxError::Validation("`from` address is required".into())
-        })?;
+        let from = self
+            .from
+            .ok_or_else(|| PauboxError::Validation("`from` address is required".into()))?;
         if self.to.is_empty() {
             return Err(PauboxError::Validation(
                 "at least one `to` address is required".into(),
             ));
         }
-        let subject = self.subject.ok_or_else(|| {
-            PauboxError::Validation("`subject` is required".into())
-        })?;
+        let subject = self
+            .subject
+            .ok_or_else(|| PauboxError::Validation("`subject` is required".into()))?;
 
         Ok(Message {
             from,
@@ -315,9 +310,9 @@ impl MessageBuilder {
 // ---------------------------------------------------------------------------
 
 fn is_base64(s: &str) -> bool {
-    !s.is_empty() && s.chars().all(|c| {
-        c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '='
-    })
+    !s.is_empty()
+        && s.chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=')
 }
 
 // ---------------------------------------------------------------------------

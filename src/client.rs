@@ -50,8 +50,9 @@ impl PauboxClient {
     pub fn new(api_key: impl Into<String>, api_user: impl Into<String>) -> Self {
         let api_key = api_key.into();
         let api_user = api_user.into();
-        let base_url = Url::parse(&format!("{}{}", DEFAULT_EMAIL_BASE, api_user))
+        let mut base_url = Url::parse(&format!("{}{}", DEFAULT_EMAIL_BASE, api_user))
             .expect("invalid api_user for URL construction");
+        ensure_trailing_slash(&mut base_url);
         Self {
             api_key,
             http: reqwest::Client::new(),
@@ -160,10 +161,11 @@ impl PauboxClientBuilder {
             .api_user
             .ok_or_else(|| PauboxError::Validation("api_user is required".into()))?;
 
-        let base_url = match self.base_url {
+        let mut base_url = match self.base_url {
             Some(u) => u,
             None => Url::parse(&format!("{}{}", DEFAULT_EMAIL_BASE, api_user))?,
         };
+        ensure_trailing_slash(&mut base_url);
 
         let mut builder = reqwest::Client::builder();
         if let Some(t) = self.timeout {
@@ -176,6 +178,19 @@ impl PauboxClientBuilder {
             http,
             base_url,
         })
+    }
+}
+
+/// Ensure the URL's path ends with `/`.
+///
+/// [`Url::join`] treats the last path segment as a file and replaces it unless
+/// the path ends with a slash.  Normalising base URLs this way keeps the
+/// per-customer `{api_user}` (and the Forms `/forms`) segment intact when
+/// endpoint paths are joined on.
+pub(crate) fn ensure_trailing_slash(url: &mut url::Url) {
+    if !url.path().ends_with('/') {
+        let with_slash = format!("{}/", url.path());
+        url.set_path(&with_slash);
     }
 }
 

@@ -12,7 +12,10 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 // ---------------------------------------------------------------------------
 
 async fn make_client(server: &MockServer) -> PauboxClient {
-    let base_url = url::Url::parse(&format!("{}/", server.uri())).unwrap();
+    // Deliberately include the per-customer `{api_user}` path segment and omit
+    // the trailing slash, so these tests assert the client preserves it when
+    // joining endpoint paths (regression test for the dropped-segment bug).
+    let base_url = url::Url::parse(&format!("{}/v1/test-user", server.uri())).unwrap();
     PauboxClient::builder()
         .api_key("test-key")
         .api_user("test-user")
@@ -40,11 +43,11 @@ async fn send_message_returns_tracking_id() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/messages"))
+        .and(path("/v1/test-user/messages"))
         .and(header("Authorization", "Token token=test-key"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "sourceTrackingId": "abc-123",
-            "message": "Service OK"
+            "data": "Service OK"
         })))
         .mount(&server)
         .await;
@@ -65,7 +68,7 @@ async fn send_message_401_returns_auth_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/messages"))
+        .and(path("/v1/test-user/messages"))
         .respond_with(ResponseTemplate::new(401).set_body_string("Unauthorized"))
         .mount(&server)
         .await;
@@ -85,7 +88,7 @@ async fn send_message_500_returns_http_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/messages"))
+        .and(path("/v1/test-user/messages"))
         .respond_with(ResponseTemplate::new(500).set_body_string("Internal Server Error"))
         .mount(&server)
         .await;
@@ -108,7 +111,7 @@ async fn send_message_malformed_json_returns_deserialize_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/messages"))
+        .and(path("/v1/test-user/messages"))
         .respond_with(ResponseTemplate::new(200).set_body_string("not json"))
         .mount(&server)
         .await;
@@ -128,7 +131,7 @@ async fn get_email_disposition_parses_response() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/message_receipt"))
+        .and(path("/v1/test-user/message_receipt"))
         .and(query_param("sourceTrackingId", "track-xyz"))
         .and(header("Authorization", "Token token=test-key"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
@@ -177,7 +180,7 @@ async fn get_email_disposition_empty_timestamps_become_none() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/message_receipt"))
+        .and(path("/v1/test-user/message_receipt"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "sourceTrackingId": "track-abc",
             "data": {

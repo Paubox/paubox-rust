@@ -14,7 +14,9 @@ pub struct SendResponse {
     #[serde(rename = "sourceTrackingId")]
     pub source_tracking_id: String,
 
-    /// Human-readable confirmation message from the API.
+    /// Human-readable confirmation message from the API (typically
+    /// `"Service OK"`).  Returned by the API in the `data` field.
+    #[serde(rename = "data")]
     pub message: String,
 }
 
@@ -49,15 +51,23 @@ pub struct MessageDelivery {
     pub delivery_status: String,
 
     /// ISO 8601 delivery timestamp, or `None` if not yet delivered.
-    #[serde(rename = "deliveryTime", deserialize_with = "empty_string_as_none")]
+    #[serde(
+        rename = "deliveryTime",
+        default,
+        deserialize_with = "empty_string_as_none"
+    )]
     pub delivery_time: Option<String>,
 
     /// Open status: `"opened"` or `"unopened"`.
-    #[serde(rename = "openedStatus")]
+    #[serde(rename = "openedStatus", default)]
     pub opened_status: String,
 
     /// ISO 8601 open timestamp, or `None` if not yet opened.
-    #[serde(rename = "openedTime", deserialize_with = "empty_string_as_none")]
+    #[serde(
+        rename = "openedTime",
+        default,
+        deserialize_with = "empty_string_as_none"
+    )]
     pub opened_time: Option<String>,
 }
 
@@ -123,11 +133,19 @@ pub(crate) struct MessageDeliveryWire {
 pub(crate) struct DeliveryStatusWire {
     #[serde(rename = "deliveryStatus", default)]
     pub delivery_status: String,
-    #[serde(rename = "deliveryTime", deserialize_with = "empty_string_as_none")]
+    #[serde(
+        rename = "deliveryTime",
+        default,
+        deserialize_with = "empty_string_as_none"
+    )]
     pub delivery_time: Option<String>,
     #[serde(rename = "openedStatus", default)]
     pub opened_status: String,
-    #[serde(rename = "openedTime", deserialize_with = "empty_string_as_none")]
+    #[serde(
+        rename = "openedTime",
+        default,
+        deserialize_with = "empty_string_as_none"
+    )]
     pub opened_time: Option<String>,
 }
 

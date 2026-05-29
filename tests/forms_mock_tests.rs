@@ -13,7 +13,10 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 // ---------------------------------------------------------------------------
 
 async fn make_client(server: &MockServer) -> FormsClient {
-    let base_url = url::Url::parse(&server.uri()).unwrap();
+    // Include the `/forms` base segment (without a trailing slash) so these
+    // tests assert the client preserves it when joining endpoint paths
+    // (regression test for the dropped-segment bug).
+    let base_url = url::Url::parse(&format!("{}/forms", server.uri())).unwrap();
     FormsClient::with_base_url(base_url)
 }
 
@@ -26,7 +29,7 @@ async fn get_form_parses_response() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/public/form_data/test-uuid"))
+        .and(path("/forms/public/form_data/test-uuid"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "id": "test-uuid",
             "title": "Patient Intake",
@@ -64,7 +67,7 @@ async fn get_form_404_returns_http_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/public/form_data/missing"))
+        .and(path("/forms/public/form_data/missing"))
         .respond_with(ResponseTemplate::new(404).set_body_string("Not Found"))
         .mount(&server)
         .await;
@@ -87,7 +90,7 @@ async fn get_form_malformed_json_returns_deserialize_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/public/form_data/bad"))
+        .and(path("/forms/public/form_data/bad"))
         .respond_with(ResponseTemplate::new(200).set_body_string("{invalid json"))
         .mount(&server)
         .await;
@@ -107,7 +110,7 @@ async fn submit_form_201_returns_ok() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/api/forms/test-uuid/submissions"))
+        .and(path("/forms/api/forms/test-uuid/submissions"))
         .respond_with(ResponseTemplate::new(201))
         .mount(&server)
         .await;
@@ -130,7 +133,7 @@ async fn submit_form_400_returns_http_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/api/forms/test-uuid/submissions"))
+        .and(path("/forms/api/forms/test-uuid/submissions"))
         .respond_with(ResponseTemplate::new(400).set_body_string("Bad Request"))
         .mount(&server)
         .await;

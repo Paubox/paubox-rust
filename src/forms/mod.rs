@@ -33,7 +33,7 @@ pub use submission::{FormAttachment, FormSubmission, FormSubmissionBuilder};
 
 use url::Url;
 
-use crate::client::FORMS_BASE_URL;
+use crate::client::{ensure_trailing_slash, FORMS_BASE_URL};
 use crate::error::PauboxError;
 
 /// Client for the Paubox Forms API.
@@ -57,7 +57,8 @@ impl FormsClient {
     /// Create a `FormsClient` with a custom base URL.
     ///
     /// Primarily useful for tests that point at a mock server.
-    pub fn with_base_url(base_url: Url) -> Self {
+    pub fn with_base_url(mut base_url: Url) -> Self {
+        ensure_trailing_slash(&mut base_url);
         Self {
             http: reqwest::Client::new(),
             base_url,
@@ -68,7 +69,8 @@ impl FormsClient {
     ///
     /// Called internally by [`crate::PauboxClient::forms`].
     pub(crate) fn with_http(http: reqwest::Client) -> Self {
-        let base_url = Url::parse(FORMS_BASE_URL).expect("hardcoded URL is valid");
+        let mut base_url = Url::parse(FORMS_BASE_URL).expect("hardcoded URL is valid");
+        ensure_trailing_slash(&mut base_url);
         Self { http, base_url }
     }
 

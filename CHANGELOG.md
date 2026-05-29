@@ -7,17 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- Email and Forms requests dropped the trailing base-path segment, sending
-  requests to `…/v1/messages` and `…/public/form_data/{id}` (404) instead of
-  `…/v1/{api_user}/messages` and `…/forms/public/form_data/{id}`. Base URLs
-  are now normalised with a trailing slash so `Url::join` preserves them.
-- `send_message` failed to parse the success response: the confirmation
-  string is returned by the API in the `data` field, not `message`.
-- `get_email_disposition` failed to parse responses for freshly-sent
-  messages because `deliveryTime` / `openedTime` may be absent; these now
-  default to `None`.
-
 ## [0.1.0] - 2026-05-28
 
 Initial public release.

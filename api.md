@@ -9,7 +9,7 @@ The SDK exposes two independent clients and shared error/helper types:
 | `PauboxClient` | `paubox` | Yes — `Token token=<key>` | `https://api.paubox.net/v1/{api_user}` |
 | `FormsClient` | `paubox::forms` | No | `https://apx.paubox.com/forms` |
 
-Both clients are re-exported from the top-level `paubox` crate:
+`PauboxClient` and `PauboxError` are re-exported at the crate root; `FormsClient` lives in the `paubox::forms` module:
 
 ```rust
 use paubox::{PauboxClient, PauboxError};

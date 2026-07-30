@@ -23,7 +23,7 @@ Initial public release.
 - Cargo feature flags `email` and `forms` (both enabled by default)
 - `wiremock`-based mock test suite — no live API calls required
 - Examples: `send_email`, `check_disposition`, `get_form`, `submit_form`
-- GitHub Actions CI: fmt, clippy, test, MSRV (1.75), and feature-flag matrix
+- GitHub Actions CI: fmt, clippy, test, MSRV (1.86), and feature-flag matrix
 - `LICENSE` (Apache 2.0), `NOTICE`, `SECURITY.md`, and `CONTRIBUTING.md`
 
 ### Requirements

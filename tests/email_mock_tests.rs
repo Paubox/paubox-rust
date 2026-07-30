@@ -11,7 +11,7 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 // Helpers
 // ---------------------------------------------------------------------------
 
-async fn make_client(server: &MockServer) -> PauboxClient {
+fn make_client(server: &MockServer) -> PauboxClient {
     // Deliberately include the per-customer `{api_user}` path segment and omit
     // the trailing slash, so these tests assert the client preserves it when
     // joining endpoint paths (regression test for the dropped-segment bug).
@@ -52,7 +52,7 @@ async fn send_message_returns_tracking_id() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let resp = client.send_message(&simple_message()).await.unwrap();
 
     assert_eq!(resp.source_tracking_id, "abc-123");
@@ -73,7 +73,7 @@ async fn send_message_401_returns_auth_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.send_message(&simple_message()).await.unwrap_err();
 
     assert!(matches!(err, PauboxError::Auth(_)));
@@ -93,7 +93,7 @@ async fn send_message_500_returns_http_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.send_message(&simple_message()).await.unwrap_err();
 
     match err {
@@ -116,7 +116,7 @@ async fn send_message_malformed_json_returns_deserialize_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.send_message(&simple_message()).await.unwrap_err();
 
     assert!(matches!(err, PauboxError::Deserialize(_)));
@@ -157,7 +157,7 @@ async fn get_email_disposition_parses_response() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let resp = client.get_email_disposition("track-xyz").await.unwrap();
 
     assert_eq!(resp.source_tracking_id, "track-xyz");
@@ -204,7 +204,7 @@ async fn get_email_disposition_empty_timestamps_become_none() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let resp = client.get_email_disposition("track-abc").await.unwrap();
 
     let d = &resp.message_deliveries[0];
@@ -227,7 +227,7 @@ async fn api_status_success_returns_ok() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     client.api_status().await.unwrap();
 }
 
@@ -241,7 +241,7 @@ async fn api_status_401_returns_auth_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.api_status().await.unwrap_err();
 
     match err {
@@ -260,7 +260,7 @@ async fn api_status_500_returns_http_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.api_status().await.unwrap_err();
 
     match err {

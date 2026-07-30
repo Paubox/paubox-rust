@@ -38,10 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    if !resp.errors.is_empty() {
-        for err in &resp.errors {
-            eprintln!("API error: {:?}", err);
-        }
+    for err in &resp.errors {
+        eprintln!("API error: {:?}", err);
     }
 
     Ok(())

@@ -116,13 +116,7 @@ impl PauboxClient {
         if resp.status().is_success() {
             Ok(())
         } else {
-            let status = resp.status().as_u16();
-            let body = resp.text().await.unwrap_or_default();
-            if status == 401 {
-                Err(PauboxError::Auth(body))
-            } else {
-                Err(PauboxError::Http { status, body })
-            }
+            Err(error_from_response(resp).await)
         }
     }
 }
@@ -135,21 +129,26 @@ async fn handle_response<T>(resp: reqwest::Response) -> Result<T, PauboxError>
 where
     T: serde::de::DeserializeOwned,
 {
-    let status = resp.status();
-    if status.is_success() {
+    if resp.status().is_success() {
         let text = resp.text().await?;
         let parsed = serde_json::from_str::<T>(&text)?;
         Ok(parsed)
     } else {
-        let status_u16 = status.as_u16();
-        let body = resp.text().await.unwrap_or_default();
-        if status_u16 == 401 {
-            Err(PauboxError::Auth(body))
-        } else {
-            Err(PauboxError::Http {
-                status: status_u16,
-                body,
-            })
-        }
+        Err(error_from_response(resp).await)
+    }
+}
+
+/// Map a non-success Email API response to a [`PauboxError`].
+///
+/// HTTP 401 becomes [`PauboxError::Auth`]; every other status becomes
+/// [`PauboxError::Http`].  The body is read for context and defaults to the
+/// empty string if it cannot be decoded.
+async fn error_from_response(resp: reqwest::Response) -> PauboxError {
+    let status = resp.status().as_u16();
+    let body = resp.text().await.unwrap_or_default();
+    if status == 401 {
+        PauboxError::Auth(body)
+    } else {
+        PauboxError::Http { status, body }
     }
 }

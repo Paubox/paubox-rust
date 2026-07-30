@@ -114,8 +114,10 @@ impl FormsClient {
     /// 250 MB (including attachments).
     ///
     /// # Errors
-    /// - [`PauboxError::Validation`] — `form_data` is null or empty (validated
-    ///   before the network call)
+    /// - [`PauboxError::Validation`] — `form_data` was never set, or is JSON
+    ///   `null` (validated by [`FormSubmission::builder`] before any network
+    ///   call).  An empty object is *not* rejected locally; the API answers
+    ///   with 400.
     /// - [`PauboxError::Http`] — form not found (404), bad request (400), or
     ///   server error
     /// - [`PauboxError::Request`] — network failure

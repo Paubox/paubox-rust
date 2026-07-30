@@ -78,9 +78,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check
-      - run: cargo check --no-default-features --features email
-      - run: cargo check --no-default-features --features forms
+      # --all-targets so tests, examples, and doctest gating are covered too:
+      # a lib-only check passes even when no example under the active feature
+      # set compiles.
+      - run: cargo test --all-targets
+      - run: cargo test --no-default-features --features email --all-targets
+      - run: cargo test --no-default-features --features forms --all-targets
+      # Doctests are not built by --all-targets, so run them per feature set.
+      - run: cargo test --no-default-features --features email --doc
+      - run: cargo test --no-default-features --features forms --doc
       # At least one feature is required; a bare --no-default-features build
       # is intentionally rejected by a compile_error in src/lib.rs.
 

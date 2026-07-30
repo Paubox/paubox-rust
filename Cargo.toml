@@ -33,3 +33,32 @@ url = "2"
 [dev-dependencies]
 wiremock = "0.6"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+
+# Tests and examples exercise one API each, so they only build when the
+# corresponding feature is on.  Without these gates
+# `--no-default-features --features forms` (and vice versa) fails to compile
+# any target other than the library.
+
+[[test]]
+name = "email_mock_tests"
+required-features = ["email"]
+
+[[test]]
+name = "forms_mock_tests"
+required-features = ["forms"]
+
+[[example]]
+name = "send_email"
+required-features = ["email"]
+
+[[example]]
+name = "check_disposition"
+required-features = ["email"]
+
+[[example]]
+name = "get_form"
+required-features = ["forms"]
+
+[[example]]
+name = "submit_form"
+required-features = ["forms"]

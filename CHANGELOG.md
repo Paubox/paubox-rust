@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+No public API changes — every exported item, signature, and JSON payload is
+unchanged.
+
+### Fixed
+- `cargo test` / `cargo check --all-targets` now succeed under
+  `--no-default-features --features email` and
+  `--no-default-features --features forms`. Examples and integration tests
+  declare `required-features`, and the crate-level doctests are feature-gated,
+  so targets belonging to a disabled API are skipped rather than failing to
+  compile.
+- CI's feature-combination job runs `cargo test --all-targets` and a
+  per-feature doctest pass instead of a library-only `cargo check`, which had
+  been hiding the above.
+
+### Added
+- Mock tests for `PauboxClient::api_status` covering 200, 401, and 500.
+
+### Changed
+- Internal only: the Email API's non-success response mapping is shared
+  between `api_status` and `handle_response`; the Forms base URL is defined
+  once instead of through a `pub(crate)` alias.
+
+### Documentation
+- Corrected the CI MSRV noted for 0.1.0 (1.86, not 1.75).
+- `FormSubmissionBuilder::form_data` and `FormsClient::submit_form` no longer
+  claim an empty `form_data` is rejected locally; only an unset value and JSON
+  `null` are. An empty object is still sent and the API answers 400.
+- api.md no longer claims `FormsClient` is re-exported at the crate root.
+
 ## [0.1.0] - 2026-05-28
 
 Initial public release.
@@ -23,7 +52,7 @@ Initial public release.
 - Cargo feature flags `email` and `forms` (both enabled by default)
 - `wiremock`-based mock test suite — no live API calls required
 - Examples: `send_email`, `check_disposition`, `get_form`, `submit_form`
-- GitHub Actions CI: fmt, clippy, test, MSRV (1.75), and feature-flag matrix
+- GitHub Actions CI: fmt, clippy, test, MSRV (1.86), and feature-flag matrix
 - `LICENSE` (Apache 2.0), `NOTICE`, `SECURITY.md`, and `CONTRIBUTING.md`
 
 ### Requirements

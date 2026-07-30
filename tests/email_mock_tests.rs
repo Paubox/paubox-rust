@@ -11,7 +11,7 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 // Helpers
 // ---------------------------------------------------------------------------
 
-async fn make_client(server: &MockServer) -> PauboxClient {
+fn make_client(server: &MockServer) -> PauboxClient {
     // Deliberately include the per-customer `{api_user}` path segment and omit
     // the trailing slash, so these tests assert the client preserves it when
     // joining endpoint paths (regression test for the dropped-segment bug).
@@ -52,7 +52,7 @@ async fn send_message_returns_tracking_id() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let resp = client.send_message(&simple_message()).await.unwrap();
 
     assert_eq!(resp.source_tracking_id, "abc-123");
@@ -73,7 +73,7 @@ async fn send_message_401_returns_auth_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.send_message(&simple_message()).await.unwrap_err();
 
     assert!(matches!(err, PauboxError::Auth(_)));
@@ -93,7 +93,7 @@ async fn send_message_500_returns_http_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.send_message(&simple_message()).await.unwrap_err();
 
     match err {
@@ -116,7 +116,7 @@ async fn send_message_malformed_json_returns_deserialize_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.send_message(&simple_message()).await.unwrap_err();
 
     assert!(matches!(err, PauboxError::Deserialize(_)));
@@ -157,7 +157,7 @@ async fn get_email_disposition_parses_response() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let resp = client.get_email_disposition("track-xyz").await.unwrap();
 
     assert_eq!(resp.source_tracking_id, "track-xyz");
@@ -204,12 +204,72 @@ async fn get_email_disposition_empty_timestamps_become_none() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let resp = client.get_email_disposition("track-abc").await.unwrap();
 
     let d = &resp.message_deliveries[0];
     assert!(d.delivery_time.is_none());
     assert!(d.opened_time.is_none());
+}
+
+// ---------------------------------------------------------------------------
+// api_status
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn api_status_success_returns_ok() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/test-user/"))
+        .and(header("Authorization", "Token token=test-key"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("Service OK"))
+        .mount(&server)
+        .await;
+
+    let client = make_client(&server);
+    client.api_status().await.unwrap();
+}
+
+#[tokio::test]
+async fn api_status_401_returns_auth_error() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/test-user/"))
+        .respond_with(ResponseTemplate::new(401).set_body_string("Unauthorized"))
+        .mount(&server)
+        .await;
+
+    let client = make_client(&server);
+    let err = client.api_status().await.unwrap_err();
+
+    match err {
+        PauboxError::Auth(body) => assert_eq!(body, "Unauthorized"),
+        other => panic!("unexpected error: {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn api_status_500_returns_http_error() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/test-user/"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("Internal Server Error"))
+        .mount(&server)
+        .await;
+
+    let client = make_client(&server);
+    let err = client.api_status().await.unwrap_err();
+
+    match err {
+        PauboxError::Http { status, body } => {
+            assert_eq!(status, 500);
+            assert_eq!(body, "Internal Server Error");
+        }
+        other => panic!("unexpected error: {other:?}"),
+    }
 }
 
 // ---------------------------------------------------------------------------

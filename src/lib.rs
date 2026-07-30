@@ -15,11 +15,15 @@
 //!
 //! ### Send an email
 //!
-//! ```no_run
-//! use paubox::{PauboxClient, email::Message};
+//! Requires the `email` feature.
 //!
+//! ```no_run
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! #     #[cfg(feature = "email")]
+//! #     {
+//!     use paubox::{PauboxClient, email::Message};
+//!
 //!     let client = PauboxClient::new("YOUR_API_KEY", "YOUR_API_USER");
 //!
 //!     let msg = Message::builder()
@@ -36,18 +40,23 @@
 //!     for d in &disposition.message_deliveries {
 //!         println!("{}: {} ({})", d.recipient, d.delivery_status, d.opened_status);
 //!     }
+//! #     }
 //!     Ok(())
 //! }
 //! ```
 //!
 //! ### Submit a form
 //!
-//! ```no_run
-//! use paubox::forms::{FormsClient, FormSubmission};
-//! use serde_json::json;
+//! Requires the `forms` feature.
 //!
+//! ```no_run
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! #     #[cfg(feature = "forms")]
+//! #     {
+//!     use paubox::forms::{FormsClient, FormSubmission};
+//!     use serde_json::json;
+//!
 //!     let client = FormsClient::new();
 //!
 //!     let form = client.get_form("your-form-uuid").await?;
@@ -57,17 +66,23 @@
 //!         .form_data(json!({"first_name": "Jane", "last_name": "Doe"}))
 //!         .build()?;
 //!     client.submit_form("your-form-uuid", &submission).await?;
+//! #     }
 //!     Ok(())
 //! }
 //! ```
 //!
 //! ### Credentials from environment variables
 //!
+//! Requires the `email` feature.
+//!
 //! ```no_run
+//! # #[cfg(feature = "email")]
+//! # {
 //! use paubox::PauboxClient;
 //!
 //! // Reads PAUBOX_API_KEY and PAUBOX_API_USER
 //! let client = PauboxClient::from_env().expect("credentials not set");
+//! # }
 //! ```
 
 #[cfg(not(any(feature = "email", feature = "forms")))]

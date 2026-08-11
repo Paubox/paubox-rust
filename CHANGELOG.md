@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Forms**: scoped API key authentication — `FormsClient::with_api_key` and
+  `FormsClient::builder()` (`api_key`, `base_url`, `timeout`). Keys are sent as
+  `Authorization: Bearer` and must carry the `forms` scope
+- **Forms**: authenticated form management — `list_forms` (pagination, search,
+  archived/active filters, sorting), `create_form`, `get_form_by_id`,
+  `update_form` (PATCH-style partial update), `archive_form`, `unarchive_form`,
+  `copy_form`, and `form_stats`
+- **Forms**: authenticated submission access — `list_submissions`,
+  `export_submissions_csv`, `export_submission_csv`, and `export_submission_pdf`
+- New `forms::admin` types: `CreateForm` (+ builder), `UpdateForm`,
+  `FormListParams`, `SubmissionListParams`, `FormPage`, `PageInfo`, `FormStats`,
+  `Submission` (with `form_data_json()` helper), and `SubmissionPage`
+- Examples: `list_forms`, `create_form`, `export_submissions`
+
+### Changed
+- `forms::Form` gained the newer server fields (`version`, `vanity_url`,
+  `recipient`, `signature_confirmation_label`, `type_`, `subscription_list_id`,
+  `archived`, `deleted`, `old_form_id`) — all serde-defaulted, so existing
+  deserialization keeps working
+- Forms endpoints now map HTTP 401 to `PauboxError::Auth` (previously
+  `PauboxError::Http { status: 401, .. }`); protected methods fail fast with
+  `PauboxError::Auth` before any network call when no API key is configured
+
 ## [0.1.0] - 2026-05-28
 
 Initial public release.

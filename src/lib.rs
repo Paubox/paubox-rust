@@ -9,7 +9,7 @@
 //! | Feature | Default | Description |
 //! |---------|---------|-------------|
 //! | `email` | ✓ | Paubox Email API (send messages, track delivery) |
-//! | `forms` | ✓ | Paubox Forms API (get form definitions, submit responses) |
+//! | `forms` | ✓ | Paubox Forms API (manage forms, list/export submissions, submit responses) |
 //!
 //! ## Quick start
 //!
@@ -57,6 +57,30 @@
 //!         .form_data(json!({"first_name": "Jane", "last_name": "Doe"}))
 //!         .build()?;
 //!     client.submit_form("your-form-uuid", &submission).await?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### Manage forms with a scoped API key
+//!
+//! Administrative Forms endpoints (list/create/update/archive/copy forms,
+//! stats, and submission listing/export) require an API key carrying the
+//! `forms` scope, sent as a Bearer token:
+//!
+//! ```no_run
+//! use paubox::forms::{FormListParams, FormsClient};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let client = FormsClient::with_api_key("key-with-forms-scope");
+//!
+//!     // `customer_id` is required for API-key callers.
+//!     let page = client
+//!         .list_forms(&FormListParams::default().customer_id(42).active(true))
+//!         .await?;
+//!     for form in &page.results {
+//!         println!("{} ({} submissions)", form.title, form.submission_count);
+//!     }
 //!     Ok(())
 //! }
 //! ```

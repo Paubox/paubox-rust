@@ -25,34 +25,25 @@ const DEFAULT_FORMS_BASE: &str = "https://api.paubox.com/forms";
 /// ```no_run
 /// use paubox::PauboxClient;
 ///
-/// let client = PauboxClient::new("my-api-key", "my-api-user");
+/// let client = PauboxClient::new("my-api-key");
 /// ```
 #[cfg(feature = "email")]
 #[derive(Debug, Clone)]
 pub struct PauboxClient {
     pub(crate) api_key: String,
     pub(crate) http: reqwest::Client,
-    /// Per-customer base URL: `https://api.paubox.com/v1/{api_user}`.
+    /// Base URL for the Email API; defaults to `https://api.paubox.com/v1/`.
     pub(crate) base_url: Url,
 }
 
 #[cfg(feature = "email")]
 impl PauboxClient {
-    /// Create a new client with the given API key and API user (endpoint name).
+    /// Create a new client with the given API key.
     ///
-    /// The base URL defaults to `https://api.paubox.com/v1/{api_user}`.
-    ///
-    /// # Panics
-    /// Panics if the default base URL cannot be constructed from the provided
-    /// `api_user` string (e.g. it contains characters that are invalid in a
-    /// URL path segment).  Use [`PauboxClient::builder`] for fallible
-    /// construction.
-    pub fn new(api_key: impl Into<String>, api_user: impl Into<String>) -> Self {
+    /// The base URL defaults to `https://api.paubox.com/v1/`.
+    pub fn new(api_key: impl Into<String>) -> Self {
         let api_key = api_key.into();
-        let api_user = api_user.into();
-        let mut base_url = Url::parse(&format!("{}{}", DEFAULT_EMAIL_BASE, api_user))
-            .expect("invalid api_user for URL construction");
-        ensure_trailing_slash(&mut base_url);
+        let base_url = Url::parse(DEFAULT_EMAIL_BASE).expect("hardcoded URL is valid");
         Self {
             api_key,
             http: reqwest::Client::new(),
@@ -70,14 +61,12 @@ impl PauboxClient {
     ///
     /// Reads:
     /// - `PAUBOX_API_KEY` — your API key
-    /// - `PAUBOX_API_USER` — your API user / endpoint name
     ///
     /// # Errors
-    /// Returns [`PauboxError::EnvVar`] if either variable is absent or empty.
+    /// Returns [`PauboxError::EnvVar`] if the variable is absent or empty.
     pub fn from_env() -> Result<Self, PauboxError> {
         let api_key = env_required("PAUBOX_API_KEY")?;
-        let api_user = env_required("PAUBOX_API_USER")?;
-        Ok(Self::new(api_key, api_user))
+        Ok(Self::new(api_key))
     }
 
     /// Return a [`FormsClient`] that reuses this client's HTTP connection pool.
@@ -108,7 +97,6 @@ impl PauboxClient {
 ///
 /// let client = PauboxClient::builder()
 ///     .api_key("my-key")
-///     .api_user("my-user")
 ///     .timeout(Duration::from_secs(30))
 ///     .build()
 ///     .unwrap();
@@ -117,7 +105,6 @@ impl PauboxClient {
 #[derive(Debug, Default)]
 pub struct PauboxClientBuilder {
     api_key: Option<String>,
-    api_user: Option<String>,
     base_url: Option<Url>,
     timeout: Option<std::time::Duration>,
 }
@@ -127,12 +114,6 @@ impl PauboxClientBuilder {
     /// Set the API key.
     pub fn api_key(mut self, key: impl Into<String>) -> Self {
         self.api_key = Some(key.into());
-        self
-    }
-
-    /// Set the API user (endpoint name).
-    pub fn api_user(mut self, user: impl Into<String>) -> Self {
-        self.api_user = Some(user.into());
         self
     }
 
@@ -151,19 +132,15 @@ impl PauboxClientBuilder {
     /// Consume the builder and produce a [`PauboxClient`].
     ///
     /// # Errors
-    /// Returns [`PauboxError::Validation`] if `api_key` or `api_user` were not
-    /// set, or [`PauboxError::Url`] if the base URL cannot be constructed.
+    /// Returns [`PauboxError::Validation`] if `api_key` was not set.
     pub fn build(self) -> Result<PauboxClient, PauboxError> {
         let api_key = self
             .api_key
             .ok_or_else(|| PauboxError::Validation("api_key is required".into()))?;
-        let api_user = self
-            .api_user
-            .ok_or_else(|| PauboxError::Validation("api_user is required".into()))?;
 
         let mut base_url = match self.base_url {
             Some(u) => u,
-            None => Url::parse(&format!("{}{}", DEFAULT_EMAIL_BASE, api_user))?,
+            None => Url::parse(DEFAULT_EMAIL_BASE).expect("hardcoded URL is valid"),
         };
         ensure_trailing_slash(&mut base_url);
 
@@ -185,8 +162,8 @@ impl PauboxClientBuilder {
 ///
 /// [`Url::join`] treats the last path segment as a file and replaces it unless
 /// the path ends with a slash.  Normalising base URLs this way keeps the
-/// per-customer `{api_user}` (and the Forms `/forms`) segment intact when
-/// endpoint paths are joined on.
+/// final path segment (e.g. the Forms `/forms` segment, or a custom override's
+/// path) intact when endpoint paths are joined on.
 pub(crate) fn ensure_trailing_slash(url: &mut url::Url) {
     if !url.path().ends_with('/') {
         let with_slash = format!("{}/", url.path());

@@ -12,9 +12,9 @@ use crate::error::PauboxError;
 use crate::forms::FormsClient;
 
 #[cfg(feature = "email")]
-const DEFAULT_EMAIL_BASE: &str = "https://api.paubox.net/v1/";
+const DEFAULT_EMAIL_BASE: &str = "https://api.paubox.com/v1/";
 #[cfg(feature = "forms")]
-const DEFAULT_FORMS_BASE: &str = "https://apx.paubox.com/forms";
+const DEFAULT_FORMS_BASE: &str = "https://api.paubox.com/forms";
 
 /// Client for the Paubox Email API.
 ///
@@ -32,7 +32,7 @@ const DEFAULT_FORMS_BASE: &str = "https://apx.paubox.com/forms";
 pub struct PauboxClient {
     pub(crate) api_key: String,
     pub(crate) http: reqwest::Client,
-    /// Per-customer base URL: `https://api.paubox.net/v1/{api_user}`.
+    /// Per-customer base URL: `https://api.paubox.com/v1/{api_user}`.
     pub(crate) base_url: Url,
 }
 
@@ -40,7 +40,7 @@ pub struct PauboxClient {
 impl PauboxClient {
     /// Create a new client with the given API key and API user (endpoint name).
     ///
-    /// The base URL defaults to `https://api.paubox.net/v1/{api_user}`.
+    /// The base URL defaults to `https://api.paubox.com/v1/{api_user}`.
     ///
     /// # Panics
     /// Panics if the default base URL cannot be constructed from the provided

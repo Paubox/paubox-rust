@@ -20,7 +20,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = PauboxClient::new("YOUR_API_KEY", "YOUR_API_USER");
+//!     let client = PauboxClient::new("YOUR_API_KEY");
 //!
 //!     let msg = Message::builder()
 //!         .from("you@yourdomain.com")
@@ -90,7 +90,7 @@
 //! ```no_run
 //! use paubox::PauboxClient;
 //!
-//! // Reads PAUBOX_API_KEY and PAUBOX_API_USER
+//! // Reads PAUBOX_API_KEY
 //! let client = PauboxClient::from_env().expect("credentials not set");
 //! ```
 

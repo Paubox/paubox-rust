@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Forms endpoints now map HTTP 401 to `PauboxError::Auth` (previously
   `PauboxError::Http { status: 401, .. }`); protected methods fail fast with
   `PauboxError::Auth` before any network call when no API key is configured
+### Changed
+- **BREAKING**: `PauboxClient::new` now takes only an API key — the Paubox APIs no longer require an API user / endpoint name for authentication. The Email API base URL is now `https://api.paubox.com/v1/` (the `{api_user}` path segment is gone).
+- **BREAKING**: `PauboxClient::from_env` now reads only `PAUBOX_API_KEY`; `PAUBOX_API_USER` is no longer read.
+
+### Removed
+- **BREAKING**: `PauboxClientBuilder::api_user` — `build()` now requires only `api_key`.
 
 ## [0.1.0] - 2026-05-28
 

@@ -2,7 +2,6 @@
 //!
 //! ```sh
 //! export PAUBOX_API_KEY="your-api-key"
-//! export PAUBOX_API_USER="your-api-user"
 //! cargo run --example check_disposition -- <source_tracking_id>
 //! ```
 

@@ -6,8 +6,8 @@ The SDK exposes two independent clients and shared error/helper types:
 
 | Type | Module | Auth required | API Base URL |
 |------|--------|:-------------:|--------------|
-| `PauboxClient` | `paubox` | Yes — `Token token=<key>` | `https://api.paubox.net/v1/{api_user}` |
-| `FormsClient` | `paubox::forms` | No | `https://apx.paubox.com/forms` |
+| `PauboxClient` | `paubox` | Yes — `Token token=<key>` | `https://api.paubox.com/v1/` |
+| `FormsClient` | `paubox::forms` | No | `https://api.paubox.com/forms` |
 
 Both clients are re-exported from the top-level `paubox` crate:
 
@@ -24,14 +24,13 @@ Holds API credentials and a shared HTTP connection pool.  Create once and reuse.
 
 ### Constructors
 
-#### `PauboxClient::new(api_key, api_user) -> PauboxClient`
+#### `PauboxClient::new(api_key) -> PauboxClient`
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `api_key` | `impl Into<String>` | Your Paubox API key |
-| `api_user` | `impl Into<String>` | Your API user (endpoint name) |
 
-Panics if `api_user` contains characters that are invalid in a URL path segment.  Use `PauboxClient::builder()` for fallible construction.
+Uses the default Email API base URL (`https://api.paubox.com/v1/`).  Use `PauboxClient::builder()` to override the base URL or timeout.
 
 #### `PauboxClient::from_env() -> Result<PauboxClient, PauboxError>`
 
@@ -40,9 +39,8 @@ Reads credentials from environment variables:
 | Variable | Description |
 |----------|-------------|
 | `PAUBOX_API_KEY` | API key |
-| `PAUBOX_API_USER` | API user / endpoint name |
 
-Returns `PauboxError::EnvVar` if either variable is absent or empty.
+Returns `PauboxError::EnvVar` if the variable is absent or empty.
 
 #### `PauboxClient::builder() -> PauboxClientBuilder`
 
@@ -53,7 +51,6 @@ Returns a builder supporting optional overrides.
 | Method | Type | Description |
 |--------|------|-------------|
 | `.api_key(key)` | `impl Into<String>` | **Required.** API key |
-| `.api_user(user)` | `impl Into<String>` | **Required.** API user |
 | `.base_url(url)` | `url::Url` | Override the Email API base URL (useful for testing) |
 | `.timeout(duration)` | `std::time::Duration` | Per-request timeout |
 | `.build()` | — | Returns `Result<PauboxClient, PauboxError>` |
@@ -71,7 +68,7 @@ Returns a `FormsClient` that reuses the same underlying HTTP connection pool.
 Send a message through the Paubox Email API.
 
 ```
-POST https://api.paubox.net/v1/{api_user}/messages
+POST https://api.paubox.com/v1/messages
 Authorization: Token token={api_key}
 Content-Type: application/json
 ```
@@ -97,7 +94,7 @@ Content-Type: application/json
 Retrieve per-recipient delivery status for a sent message.
 
 ```
-GET https://api.paubox.net/v1/{api_user}/message_receipt?sourceTrackingId={id}
+GET https://api.paubox.com/v1/message_receipt?sourceTrackingId={id}
 Authorization: Token token={api_key}
 ```
 
@@ -116,7 +113,7 @@ Authorization: Token token={api_key}
 Check that the API is reachable and credentials are valid.
 
 ```
-GET https://api.paubox.net/v1/{api_user}/
+GET https://api.paubox.com/v1/
 Authorization: Token token={api_key}
 ```
 
@@ -237,7 +234,7 @@ Client for the Paubox Forms API.  No authentication required.
 
 #### `FormsClient::new() -> FormsClient`
 
-Uses the default Forms API base URL (`https://apx.paubox.com/forms`).
+Uses the default Forms API base URL (`https://api.paubox.com/forms`).
 
 #### `FormsClient::with_base_url(url: Url) -> FormsClient`
 
@@ -248,7 +245,7 @@ Override the base URL (useful for testing with a mock server).
 Retrieve a form definition by UUID.
 
 ```
-GET https://apx.paubox.com/forms/public/form_data/{form_id}
+GET https://api.paubox.com/forms/public/form_data/{form_id}
 ```
 
 **Returns** `Form` on success (HTTP 200).  
@@ -261,7 +258,7 @@ GET https://apx.paubox.com/forms/public/form_data/{form_id}
 Submit a respondent's answers.  Maximum request size: **250 MB**.
 
 ```
-POST https://apx.paubox.com/forms/api/forms/{form_id}/submissions
+POST https://api.paubox.com/forms/api/forms/{form_id}/submissions
 Content-Type: application/json
 ```
 

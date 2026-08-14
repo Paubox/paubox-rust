@@ -4,7 +4,6 @@
 //!
 //! ```sh
 //! export PAUBOX_API_KEY="your-api-key"
-//! export PAUBOX_API_USER="your-api-user"
 //! cargo run --example send_email
 //! ```
 

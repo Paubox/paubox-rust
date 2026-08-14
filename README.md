@@ -40,7 +40,7 @@ use paubox::{PauboxClient, email::Message};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = PauboxClient::new("YOUR_API_KEY", "YOUR_API_USER");
+    let client = PauboxClient::new("YOUR_API_KEY");
 
     let msg = Message::builder()
         .from("you@yourdomain.com")
@@ -113,20 +113,19 @@ client.submit_form("YOUR-FORM-UUID", &submission).await?;
 ### Constructor
 
 ```rust
-let client = PauboxClient::new("api-key", "api-user");
+let client = PauboxClient::new("api-key");
 ```
 
 ### Environment variables
 
 ```rust
-// Reads PAUBOX_API_KEY and PAUBOX_API_USER
+// Reads PAUBOX_API_KEY
 let client = PauboxClient::from_env()?;
 ```
 
 | Variable | Description |
 |----------|-------------|
 | `PAUBOX_API_KEY` | Your Paubox API key |
-| `PAUBOX_API_USER` | Your API user / endpoint name |
 
 ### Builder (with custom options)
 
@@ -135,7 +134,6 @@ use std::time::Duration;
 
 let client = PauboxClient::builder()
     .api_key("my-key")
-    .api_user("my-user")
     .timeout(Duration::from_secs(30))
     .build()?;
 ```

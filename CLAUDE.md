@@ -43,7 +43,6 @@ Live integration tests require:
 | Variable | Description |
 |----------|-------------|
 | `PAUBOX_API_KEY` | Your Paubox API key |
-| `PAUBOX_API_USER` | Your API user / endpoint name |
 | `PAUBOX_FROM` | Sender address (for email integration tests) |
 | `PAUBOX_TO` | Recipient address (for email integration tests) |
 | `PAUBOX_FORM_ID` | Form UUID (for Forms integration tests) |
@@ -54,7 +53,6 @@ All examples read credentials from environment variables:
 
 ```sh
 export PAUBOX_API_KEY="your-key"
-export PAUBOX_API_USER="your-user"
 
 cargo run --example send_email
 cargo run --example check_disposition -- <source_tracking_id>

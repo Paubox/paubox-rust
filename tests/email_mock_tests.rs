@@ -12,13 +12,12 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 // ---------------------------------------------------------------------------
 
 async fn make_client(server: &MockServer) -> PauboxClient {
-    // Deliberately include the per-customer `{api_user}` path segment and omit
-    // the trailing slash, so these tests assert the client preserves it when
-    // joining endpoint paths (regression test for the dropped-segment bug).
-    let base_url = url::Url::parse(&format!("{}/v1/test-user", server.uri())).unwrap();
+    // Deliberately omit the trailing slash on the `/v1` base segment, so these
+    // tests assert the client preserves it when joining endpoint paths
+    // (regression test for the dropped-segment bug).
+    let base_url = url::Url::parse(&format!("{}/v1", server.uri())).unwrap();
     PauboxClient::builder()
         .api_key("test-key")
-        .api_user("test-user")
         .base_url(base_url)
         .build()
         .unwrap()
@@ -43,7 +42,7 @@ async fn send_message_returns_tracking_id() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/v1/test-user/messages"))
+        .and(path("/v1/messages"))
         .and(header("Authorization", "Token token=test-key"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "sourceTrackingId": "abc-123",
@@ -68,7 +67,7 @@ async fn send_message_401_returns_auth_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/v1/test-user/messages"))
+        .and(path("/v1/messages"))
         .respond_with(ResponseTemplate::new(401).set_body_string("Unauthorized"))
         .mount(&server)
         .await;
@@ -88,7 +87,7 @@ async fn send_message_500_returns_http_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/v1/test-user/messages"))
+        .and(path("/v1/messages"))
         .respond_with(ResponseTemplate::new(500).set_body_string("Internal Server Error"))
         .mount(&server)
         .await;
@@ -111,7 +110,7 @@ async fn send_message_malformed_json_returns_deserialize_error() {
     let server = MockServer::start().await;
 
     Mock::given(method("POST"))
-        .and(path("/v1/test-user/messages"))
+        .and(path("/v1/messages"))
         .respond_with(ResponseTemplate::new(200).set_body_string("not json"))
         .mount(&server)
         .await;
@@ -131,7 +130,7 @@ async fn get_email_disposition_parses_response() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/v1/test-user/message_receipt"))
+        .and(path("/v1/message_receipt"))
         .and(query_param("sourceTrackingId", "track-xyz"))
         .and(header("Authorization", "Token token=test-key"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
@@ -180,7 +179,7 @@ async fn get_email_disposition_empty_timestamps_become_none() {
     let server = MockServer::start().await;
 
     Mock::given(method("GET"))
-        .and(path("/v1/test-user/message_receipt"))
+        .and(path("/v1/message_receipt"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "sourceTrackingId": "track-abc",
             "data": {
@@ -247,14 +246,28 @@ fn message_builder_missing_subject_fails() {
 }
 
 // ---------------------------------------------------------------------------
+// PauboxClient builder — validation
+// ---------------------------------------------------------------------------
+
+#[test]
+fn client_builder_missing_api_key_fails() {
+    let err = PauboxClient::builder().build().unwrap_err();
+    assert!(matches!(err, PauboxError::Validation(_)));
+}
+
+#[test]
+fn client_builder_api_key_alone_is_sufficient() {
+    PauboxClient::builder().api_key("test-key").build().unwrap();
+}
+
+// ---------------------------------------------------------------------------
 // PauboxClient::from_env
 // ---------------------------------------------------------------------------
 
 #[test]
 fn from_env_missing_key_returns_error() {
-    // Ensure neither var is set in this test process
+    // Ensure the var is not set in this test process
     std::env::remove_var("PAUBOX_API_KEY");
-    std::env::remove_var("PAUBOX_API_USER");
     let err = PauboxClient::from_env().unwrap_err();
     assert!(matches!(err, PauboxError::EnvVar(_)));
 }
@@ -264,7 +277,7 @@ fn from_env_missing_key_returns_error() {
 // ---------------------------------------------------------------------------
 
 #[tokio::test]
-#[ignore = "requires live credentials: PAUBOX_API_KEY, PAUBOX_API_USER"]
+#[ignore = "requires live credentials: PAUBOX_API_KEY"]
 async fn live_send_and_check_disposition() {
     let client = PauboxClient::from_env().unwrap();
 

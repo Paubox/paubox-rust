@@ -28,7 +28,7 @@ impl PauboxClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = PauboxClient::new("api-key", "api-user");
+    /// let client = PauboxClient::new("api-key");
     /// let msg = Message::builder()
     ///     .from("you@example.com")
     ///     .to(["patient@example.com"])
@@ -68,7 +68,7 @@ impl PauboxClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = PauboxClient::new("api-key", "api-user");
+    /// let client = PauboxClient::new("api-key");
     /// let disposition = client.get_email_disposition("tracking-id-here").await?;
     /// for delivery in &disposition.message_deliveries {
     ///     println!("{}: {}", delivery.recipient, delivery.delivery_status);

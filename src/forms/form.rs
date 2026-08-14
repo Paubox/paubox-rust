@@ -45,4 +45,43 @@ pub struct Form {
 
     /// ISO 8601 timestamp of the most recent update.
     pub updated_at: String,
+
+    /// Version number of the form definition.
+    #[serde(default)]
+    pub version: i64,
+
+    /// Optional vanity URL slug for the hosted form page.
+    #[serde(default)]
+    pub vanity_url: Option<String>,
+
+    /// Comma-separated list of email addresses that receive submission
+    /// notifications.
+    #[serde(default)]
+    pub recipient: Option<String>,
+
+    /// Label shown next to the signature confirmation checkbox on signable
+    /// forms.
+    #[serde(default)]
+    pub signature_confirmation_label: Option<String>,
+
+    /// Form type (e.g. `"marketing_form"`).  Serialized as `type` on the wire.
+    #[serde(default, rename = "type")]
+    pub type_: Option<String>,
+
+    /// ID of the connected Paubox Marketing contact list, if any.
+    #[serde(default)]
+    pub subscription_list_id: Option<String>,
+
+    /// Whether the form has been archived (no longer accepting submissions,
+    /// hidden from default listings).
+    #[serde(default)]
+    pub archived: bool,
+
+    /// Whether the form has been soft-deleted.
+    #[serde(default)]
+    pub deleted: bool,
+
+    /// ID of the legacy form this form was migrated from, if any.
+    #[serde(default)]
+    pub old_form_id: Option<i64>,
 }

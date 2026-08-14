@@ -29,7 +29,7 @@ paubox = { version = "0.1", default-features = false, features = ["forms"] }
 | Feature | Default | Description |
 |---------|:-------:|-------------|
 | `email` | ✓ | Send HIPAA-compliant email, track delivery status |
-| `forms` | ✓ | Retrieve form definitions, submit form responses |
+| `forms` | ✓ | Manage forms, list/export submissions, submit responses |
 
 ## Quick start
 
@@ -108,6 +108,42 @@ let submission = FormSubmission::builder()
 client.submit_form("YOUR-FORM-UUID", &submission).await?;
 ```
 
+### Manage forms with a scoped API key
+
+Administrative Forms endpoints require an API key carrying the `"forms"` scope, sent as a Bearer token. Create an authenticated client with `FormsClient::with_api_key` (or `FormsClient::builder()` for custom options):
+
+```rust
+use paubox::forms::{CreateForm, FormListParams, FormsClient, SubmissionListParams, UpdateForm};
+use serde_json::json;
+
+let client = FormsClient::with_api_key("key-with-forms-scope");
+
+// List forms with filters and pagination.
+// `customer_id` is required for API-key callers — pass the customer the key belongs to.
+let page = client
+    .list_forms(&FormListParams::default().customer_id(42).active(true).items(25))
+    .await?;
+println!("{} of {} forms", page.results.len(), page.page_info.count);
+
+// Create, update, archive
+let form = CreateForm::builder()
+    .title("Patient intake")
+    .customer_id(42)
+    .form_json(json!({"fields": []}))
+    .build()?;
+let id = client.create_form(&form).await?;
+client.update_form(&id, &UpdateForm::default().active(true)).await?;
+client.archive_form(&id).await?; // and unarchive_form / copy_form
+
+// Stats, submissions, exports
+let stats = client.form_stats(None).await?;
+let subs = client.list_submissions(&id, &SubmissionListParams::default()).await?;
+let csv = client.export_submissions_csv(&id).await?;
+let pdf = client.export_submission_pdf(&id, &subs.data[0].id).await?;
+```
+
+Available management methods: `list_forms`, `create_form`, `get_form_by_id`, `update_form`, `archive_form`, `unarchive_form`, `copy_form`, `form_stats`, `list_submissions`, `export_submissions_csv`, `export_submission_csv`, `export_submission_pdf`.
+
 ## Credentials
 
 ### Constructor
@@ -155,7 +191,29 @@ match client.send_message(&msg).await {
 
 ## Forms API note
 
-The Forms API endpoints are **public** — no API key is required. They are intended to be called on behalf of form respondents. `FormsClient` can be created independently of `PauboxClient`.
+The Forms API uses **scoped API keys**:
+
+- **Public endpoints** — `get_form` and `submit_form` require no API key. They are intended to be called on behalf of form respondents.
+- **Administrative endpoints** — everything else (managing forms, listing and exporting submissions) requires an API key with the `"forms"` scope, sent as `Authorization: Bearer <api_key>`. Calling a protected method on a client without an API key fails with `PauboxError::Auth` before any network request; an invalid or unscoped key is rejected by the server with 401 (also surfaced as `PauboxError::Auth`), and cross-customer access with 403 (`PauboxError::Http`).
+
+`FormsClient` can be created independently of `PauboxClient`:
+
+```rust
+use std::time::Duration;
+use paubox::forms::FormsClient;
+
+// Unauthenticated (public endpoints only)
+let client = FormsClient::new();
+
+// Authenticated (all endpoints)
+let client = FormsClient::with_api_key("key-with-forms-scope");
+
+// Builder with custom options
+let client = FormsClient::builder()
+    .api_key("key-with-forms-scope")
+    .timeout(Duration::from_secs(30))
+    .build()?;
+```
 
 If you already have a `PauboxClient`, you can reuse its connection pool:
 

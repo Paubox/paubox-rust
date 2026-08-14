@@ -58,6 +58,11 @@ cargo run --example send_email
 cargo run --example check_disposition -- <source_tracking_id>
 cargo run --example get_form -- <form_uuid>
 cargo run --example submit_form -- <form_uuid>
+
+# Authenticated Forms examples (need a PAUBOX_API_KEY with the "forms" scope)
+cargo run --example list_forms
+cargo run --example create_form -- <customer_id> [--archive-roundtrip]
+cargo run --example export_submissions -- <form_uuid> [submission_uuid]
 ```
 
 ## Feature flag combinations to verify

@@ -70,21 +70,19 @@ cargo check --no-default-features --features forms
 # build is intentionally rejected by a `compile_error!` in `src/lib.rs`.
 ```
 
-## Publishing to crates.io
+## Releasing
+
+Releases are automated by release-please and published to crates.io by CI. Do
+**not** bump `version` in `Cargo.toml`, write `CHANGELOG.md` entries, or run
+`cargo publish` by hand — release-please owns all three. See [RELEASING.md](RELEASING.md).
+
+What this means day to day: give every PR a conventional-commit title, because
+the squash subject is what determines the next version.
 
 ```sh
-# Dry-run check (catches missing metadata, path deps, etc.)
+# Validate packaging locally without publishing anything
 cargo publish --dry-run
-
-# Actual publish (requires `cargo login` first)
-cargo publish
 ```
-
-Before publishing:
-- All tests pass: `cargo test --all-features`
-- No clippy warnings: `cargo clippy --all-features -- -D warnings`
-- `Cargo.toml` version bumped appropriately
-- `CHANGELOG` or release notes updated
 
 ## Repository conventions
 

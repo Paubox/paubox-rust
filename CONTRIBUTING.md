@@ -52,13 +52,34 @@ cargo check --no-default-features --features forms
 
 ## Pull request expectations
 
+- **The PR title must be a [conventional commit](https://www.conventionalcommits.org/)** — see below
 - All tests pass: `cargo test --all-features`
 - Formatting is clean: `cargo fmt --check`
 - No clippy warnings: `cargo clippy --all-features -- -D warnings`
 - New endpoints require tests covering: happy path, 401, 404/400, malformed JSON, and builder validation
-- Public API additions require doc comments (`///` on items, `//!` on modules) and an entry in `CHANGELOG.md`
+- Public API additions require doc comments (`///` on items, `//!` on modules)
 - No `unwrap()` / `expect()` in library code (acceptable in examples and tests)
 - No path dependencies in `Cargo.toml`
+
+## PR titles and the changelog
+
+This repo squash-merges, so your PR title becomes the commit subject on `main`,
+and that subject is what release-please turns into the next version and the
+`CHANGELOG.md` entry. CI enforces the format.
+
+```
+fix: retry Forms submissions on 502
+feat: add attachment support to FormSubmission
+feat!: drop PauboxClientBuilder::api_user
+docs: correct the send_email example
+```
+
+`fix:` gives a patch bump, `feat:` a minor one, and a `!` (or a `BREAKING CHANGE:`
+footer in the body) a major one. `docs:`, `chore:`, `ci:`, `test:`, `style:`,
+`refactor:`, and `build:` do not trigger a release.
+
+**Do not edit `CHANGELOG.md` or the `version` in `Cargo.toml` in your PR.** Both
+are generated — see [RELEASING.md](RELEASING.md).
 
 See [CLAUDE.md](CLAUDE.md) for the full repository conventions.
 

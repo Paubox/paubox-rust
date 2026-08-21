@@ -1,60 +1,76 @@
 # Releasing `paubox`
 
-Releases are published to [crates.io](https://crates.io/crates/paubox). The crate
-is owned by the `Paubox/engineering` GitHub team, and every release **after the
-first** is published automatically by CI via crates.io
-[Trusted Publishing](https://crates.io/docs/trusted-publishing) (GitHub OIDC) —
-no API tokens are stored.
+Releases are automated. [release-please](https://github.com/googleapis/release-please)
+decides the version, writes the changelog, and tags; the tag is published to
+[crates.io](https://crates.io/crates/paubox) by the same workflow via
+[Trusted Publishing](https://crates.io/docs/trusted-publishing) (GitHub OIDC),
+so no registry token is stored in the repo.
 
-## One-time setup
+Nobody edits `version` in `Cargo.toml` by hand.
 
-crates.io requires the **first** version to be published manually with a token;
-trusted publishing can only be configured once the crate exists.
+## How a release happens
 
-1. On crates.io (signed in with a GitHub account that is a member of
-   `Paubox/engineering`): verify your email, then create an API token with the
-   `publish-new` scope (Account Settings → API Tokens).
-2. From a clean `main` checkout:
-   ```sh
-   cargo login <token>
-   cargo publish            # reserves the name and publishes the first version
-   ```
-3. Transfer ownership to the org and drop the personal owner:
-   ```sh
-   cargo owner --add github:Paubox:engineering
-   cargo owner --remove <your-crates-io-username>
-   ```
-4. crates.io → `paubox` crate → **Settings → Trusted Publishing → Add**:
-   - Repository owner: `Paubox`
-   - Repository name: `paubox-rust`
-   - Workflow filename: `release.yml`
-   - Environment: `release`
-5. In GitHub: repo **Settings → Environments → New environment → `release`**
-   (optionally add required reviewers to gate publishes).
-6. Revoke the one-time token created in step 1 — it is no longer needed.
+1. **Merge PRs to `main` with conventional-commit titles.** The repo squash-merges,
+   so the PR title becomes the commit subject and is the only thing release-please
+   reads. `.github/workflows/pr-title.yml` rejects titles it cannot parse.
 
-## Cutting a release (every time after setup)
+   | Title prefix | Effect on the next version |
+   |---|---|
+   | `fix:` | patch |
+   | `feat:` | minor |
+   | `feat!:` / any type with `!`, or a `BREAKING CHANGE:` footer | major |
+   | `docs:`, `chore:`, `ci:`, `refactor:`, `test:`, `style:`, `build:` | none |
 
-1. Update `version` in `Cargo.toml` (SemVer; `0.x` → breaking = minor bump,
-   fix = patch bump).
-2. Move `CHANGELOG.md`'s `[Unreleased]` items into a new dated section and
-   update the compare links.
-3. Verify locally:
-   ```sh
-   cargo fmt --all --check
-   cargo clippy --all-features --all-targets -- -D warnings
-   cargo test --all-features
-   cargo publish --dry-run
-   ```
-4. Commit, open a PR, and merge to `main`.
-5. Tag and push:
-   ```sh
-   git tag vX.Y.Z
-   git push origin vX.Y.Z
-   ```
-   The `release.yml` workflow verifies and publishes to crates.io via OIDC.
-6. Create a GitHub Release from the tag (paste the CHANGELOG section).
+2. **release-please keeps a release PR open** titled `chore(main): release X.Y.Z`.
+   It bumps `Cargo.toml` and `Cargo.lock` and adds the `CHANGELOG.md` section.
+   It rewrites itself on every push to `main`, so leave it alone until you want
+   to ship.
 
-crates.io versions are **immutable** — you cannot overwrite or re-upload a
-version. To retract a broken release use `cargo yank --version X.Y.Z` (this
-prevents new dependents from selecting it but does not delete it).
+3. **Merge the release PR.** That creates the `vX.Y.Z` tag and the GitHub
+   Release, which in turn runs the `publish` job: `cargo fmt --check`,
+   `cargo test --all-features`, `cargo publish --dry-run`, then `cargo publish`
+   against an OIDC-minted token.
+
+## Forcing a specific version
+
+To release a version release-please would not have chosen, put a `Release-As`
+footer in a commit on `main`:
+
+```sh
+git commit --allow-empty -m "chore: release 2.0.0" -m "Release-As: 2.0.0"
+```
+
+The next release PR is pinned to that version.
+
+## Configuration
+
+| File | Purpose |
+|---|---|
+| `release-please-config.json` | `release-type: rust`, bare `vX.Y.Z` tags |
+| `.release-please-manifest.json` | the last released version — **seeded from crates.io, not from `Cargo.toml`** |
+| `.github/workflows/release-please.yml` | the release PR and the publish job |
+
+The publish job lives in `release-please.yml` rather than in a workflow
+triggered by `push: tags`, because release-please creates the tag with
+`GITHUB_TOKEN` and GitHub does not start workflow runs from `GITHUB_TOKEN`
+events — a tag-triggered publish would never fire.
+
+### Trusted publishing
+
+Registered on crates.io → `paubox` → Settings → Trusted Publishing:
+
+- Repository owner: `Paubox`
+- Repository name: `paubox-rust`
+- Workflow filename: `release-please.yml`
+- Environment: `release`
+
+The `release` environment must allow `main` as a deployment branch, since the
+workflow run's ref is `refs/heads/main` even though the publish job checks out
+the tag. Add required reviewers there if you want a human gate on publishes.
+
+## Caveats
+
+crates.io versions are **immutable** — you cannot overwrite or re-upload one. To
+retract a broken release use `cargo yank --version X.Y.Z`; that stops new
+dependents from selecting it but does not delete it. The fix for a bad release
+is always a new version.

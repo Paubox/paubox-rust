@@ -1,0 +1,63 @@
+name: SemVer
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  semver-checks:
+    name: Public API compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # release-please derives the next version from the PR title, so the title
+      # is the declaration of intent and this job holds the code to it. A PR
+      # that declares a breaking change is allowed to make one; a PR that does
+      # not, is not.
+      #
+      # Title and body go through the environment rather than being interpolated
+      # into the script, so a PR title cannot inject shell.
+      - name: Derive the release type from the PR title
+        id: release_type
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$PR_TITLE" | grep -Eq '^[a-z]+(\([^)]+\))?!:' \
+            || printf '%s\n' "$PR_BODY" | grep -q '^BREAKING CHANGE:'; then
+            echo "Title or body declares a breaking change — allowing a major bump."
+            echo "value=major" >>"$GITHUB_OUTPUT"
+          else
+            echo "No breaking change declared — breaking API changes will fail."
+            echo "value=minor" >>"$GITHUB_OUTPUT"
+          fi
+
+      # Compares this branch's public API against the newest release on
+      # crates.io. Under `minor` it fails on anything requiring a major bump;
+      # under `major` everything is permitted.
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          feature-group: all-features
+          release-type: ${{ steps.release_type.outputs.value }}
+
+      - name: Explain a failure
+        if: failure() && steps.release_type.outputs.value == 'minor'
+        run: |
+          cat <<'MSG'
+          This PR changes the public API in a way that requires a major version bump,
+          but its title does not say so, and release-please takes the version from
+          the title. Merging as-is would publish a breaking change as a minor release.
+
+          Either mark it breaking — `feat(forms)!: ...`, or a `BREAKING CHANGE:` footer
+          in the PR body — or adjust the code so the change is backwards compatible.
+
+          Adding a public field to a struct is a common way to trip this. Marking the
+          struct `#[non_exhaustive]` makes future field additions non-breaking, but the
+          attribute itself is a breaking change, so it has to land in a major release.
+          MSG
+          exit 1

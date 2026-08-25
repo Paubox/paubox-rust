@@ -6,8 +6,8 @@ The SDK exposes two independent clients and shared error/helper types:
 
 | Type | Module | Auth required | API Base URL |
 |------|--------|:-------------:|--------------|
-| `PauboxClient` | `paubox` | Yes — `Token token=<key>` | `https://api.paubox.com/v1/` |
-| `FormsClient` | `paubox::forms` | No | `https://api.paubox.com/forms` |
+| `PauboxClient` | `paubox` | Yes — `Token token=<key>` | `https://api.paubox.com/v1/email/` |
+| `FormsClient` | `paubox::forms` | No | `https://api.paubox.com/v1/forms` |
 
 Both clients are re-exported from the top-level `paubox` crate:
 
@@ -30,7 +30,7 @@ Holds API credentials and a shared HTTP connection pool.  Create once and reuse.
 |-----------|------|-------------|
 | `api_key` | `impl Into<String>` | Your Paubox API key |
 
-Uses the default Email API base URL (`https://api.paubox.com/v1/`).  Use `PauboxClient::builder()` to override the base URL or timeout.
+Uses the default Email API base URL (`https://api.paubox.com/v1/email/`).  Use `PauboxClient::builder()` to override the base URL or timeout.
 
 #### `PauboxClient::from_env() -> Result<PauboxClient, PauboxError>`
 
@@ -68,7 +68,7 @@ Returns a `FormsClient` that reuses the same underlying HTTP connection pool.
 Send a message through the Paubox Email API.
 
 ```
-POST https://api.paubox.com/v1/messages
+POST https://api.paubox.com/v1/email/messages
 Authorization: Token token={api_key}
 Content-Type: application/json
 ```
@@ -94,7 +94,7 @@ Content-Type: application/json
 Retrieve per-recipient delivery status for a sent message.
 
 ```
-GET https://api.paubox.com/v1/message_receipt?sourceTrackingId={id}
+GET https://api.paubox.com/v1/email/message_receipt?sourceTrackingId={id}
 Authorization: Token token={api_key}
 ```
 
@@ -113,7 +113,7 @@ Authorization: Token token={api_key}
 Check that the API is reachable and credentials are valid.
 
 ```
-GET https://api.paubox.com/v1/
+GET https://api.paubox.com/v1/email/
 Authorization: Token token={api_key}
 ```
 
@@ -234,7 +234,7 @@ Client for the Paubox Forms API.  No authentication required.
 
 #### `FormsClient::new() -> FormsClient`
 
-Uses the default Forms API base URL (`https://api.paubox.com/forms`).
+Uses the default Forms API base URL (`https://api.paubox.com/v1/forms`).
 
 #### `FormsClient::with_base_url(url: Url) -> FormsClient`
 
@@ -245,7 +245,7 @@ Override the base URL (useful for testing with a mock server).
 Retrieve a form definition by UUID.
 
 ```
-GET https://api.paubox.com/forms/public/form_data/{form_id}
+GET https://api.paubox.com/v1/forms/public/form_data/{form_id}
 ```
 
 **Returns** `Form` on success (HTTP 200).  
@@ -258,7 +258,7 @@ GET https://api.paubox.com/forms/public/form_data/{form_id}
 Submit a respondent's answers.  Maximum request size: **250 MB**.
 
 ```
-POST https://api.paubox.com/forms/api/forms/{form_id}/submissions
+POST https://api.paubox.com/v1/forms/api/forms/{form_id}/submissions
 Content-Type: application/json
 ```
 

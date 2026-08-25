@@ -97,3 +97,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo doc --all-features --no-deps
+
+  route-check:
+    name: Base URLs are routed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe the base URLs the clients default to
+        run: |
+          grep -hoE 'https://api\.paubox\.com[a-zA-Z0-9/_.-]*' src/client.rs \
+            | .github/scripts/route-check.sh

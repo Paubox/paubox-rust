@@ -2,9 +2,13 @@
 
 pub mod message;
 pub mod response;
+pub mod schedule;
 
 pub use message::{Attachment, Message, MessageBuilder};
 pub use response::{ApiError, DispositionResponse, MessageDelivery, SendResponse};
+pub use schedule::{
+    CancelScheduledResponse, RescheduleResponse, ScheduleResponse, ScheduledMessageStatus,
+};
 
 use crate::client::PauboxClient;
 use crate::error::PauboxError;

@@ -212,6 +212,59 @@ async fn get_email_disposition_empty_timestamps_become_none() {
 }
 
 // ---------------------------------------------------------------------------
+// api_status
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn api_status_200_returns_ok() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/v1/"))
+        .and(header("Authorization", "Token token=test-key"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("Service OK"))
+        .mount(&server)
+        .await;
+
+    let client = make_client(&server).await;
+    assert!(client.api_status().await.is_ok());
+}
+
+#[tokio::test]
+async fn api_status_401_returns_auth_error() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/v1/"))
+        .respond_with(ResponseTemplate::new(401).set_body_string("Invalid Access Token"))
+        .mount(&server)
+        .await;
+
+    let client = make_client(&server).await;
+    match client.api_status().await.unwrap_err() {
+        PauboxError::Auth(body) => assert_eq!(body, "Invalid Access Token"),
+        other => panic!("expected Auth, got {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn api_status_500_returns_http_error() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/v1/"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("boom"))
+        .mount(&server)
+        .await;
+
+    let client = make_client(&server).await;
+    match client.api_status().await.unwrap_err() {
+        PauboxError::Http { status, body } => {
+            assert_eq!(status, 500);
+            assert_eq!(body, "boom");
+        }
+        other => panic!("expected Http, got {other:?}"),
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Message builder — validation
 // ---------------------------------------------------------------------------
 

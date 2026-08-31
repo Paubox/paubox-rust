@@ -12,7 +12,7 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 // Helpers
 // ---------------------------------------------------------------------------
 
-async fn make_client(server: &MockServer) -> FormsClient {
+fn make_client(server: &MockServer) -> FormsClient {
     // Include the `/forms` base segment (without a trailing slash) so these
     // tests assert the client preserves it when joining endpoint paths
     // (regression test for the dropped-segment bug).
@@ -47,7 +47,7 @@ async fn get_form_parses_response() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let form = client.get_form("test-uuid").await.unwrap();
 
     assert_eq!(form.id, "test-uuid");
@@ -72,7 +72,7 @@ async fn get_form_404_returns_http_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.get_form("missing").await.unwrap_err();
 
     match err {
@@ -95,7 +95,7 @@ async fn get_form_malformed_json_returns_deserialize_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let err = client.get_form("bad").await.unwrap_err();
 
     assert!(matches!(err, PauboxError::Deserialize(_)));
@@ -115,7 +115,7 @@ async fn submit_form_201_returns_ok() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let submission = FormSubmission::builder()
         .form_data(json!({"first_name": "Jane"}))
         .build()
@@ -138,7 +138,7 @@ async fn submit_form_400_returns_http_error() {
         .mount(&server)
         .await;
 
-    let client = make_client(&server).await;
+    let client = make_client(&server);
     let submission = FormSubmission::builder()
         .form_data(json!({"x": "y"}))
         .build()

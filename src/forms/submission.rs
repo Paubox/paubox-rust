@@ -75,7 +75,7 @@ pub struct FormSubmissionBuilder {
 }
 
 impl FormSubmissionBuilder {
-    /// Set the form field data.  Must not be null or empty.
+    /// Set the form field data.  Must not be JSON `null`.
     pub fn form_data(mut self, data: serde_json::Value) -> Self {
         self.form_data = Some(data);
         self

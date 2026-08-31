@@ -13,8 +13,10 @@ use crate::forms::FormsClient;
 
 #[cfg(feature = "email")]
 const DEFAULT_EMAIL_BASE: &str = "https://api.paubox.com/v1/email/";
+
+/// Default Forms API base URL, used by [`crate::forms::FormsClient`].
 #[cfg(feature = "forms")]
-const DEFAULT_FORMS_BASE: &str = "https://api.paubox.com/v1/forms";
+pub(crate) const FORMS_BASE_URL: &str = "https://api.paubox.com/v1/forms";
 
 /// Client for the Paubox Email API.
 ///
@@ -179,7 +181,3 @@ pub(crate) fn env_required(name: &str) -> Result<String, PauboxError> {
         .filter(|v| !v.is_empty())
         .ok_or_else(|| PauboxError::EnvVar(name.to_owned()))
 }
-
-/// Default Forms base URL constant, re-exported for `FormsClient`.
-#[cfg(feature = "forms")]
-pub(crate) const FORMS_BASE_URL: &str = DEFAULT_FORMS_BASE;

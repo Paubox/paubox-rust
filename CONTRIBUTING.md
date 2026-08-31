@@ -78,6 +78,19 @@ docs: correct the send_email example
 footer in the body) a major one. `docs:`, `chore:`, `ci:`, `test:`, `style:`,
 `refactor:`, and `build:` do not trigger a release.
 
+CI checks the title against the code. `cargo-semver-checks` compares your branch's
+public API to the released crate, and fails if you break it without a `!`. If that
+check fails, either mark the PR breaking or make the change backwards compatible —
+do not merge a breaking change under a `feat:`, because it would publish as a minor
+release and break dependents' builds.
+
+A common way to trip this is adding a field to a public struct. That breaks any
+caller constructing it with a struct literal, unless the struct is
+`#[non_exhaustive]`. Mark new response types — the ones callers only ever receive
+— as `#[non_exhaustive]` from the start, so later field additions stay backwards
+compatible. Note that adding the attribute to an *existing* type is itself a
+breaking change, so it can only land in a major release.
+
 **Do not edit `CHANGELOG.md` or the `version` in `Cargo.toml` in your PR.** Both
 are generated — see [RELEASING.md](RELEASING.md).
 

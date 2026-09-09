@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use crate::client::PauboxClient;
 use crate::error::PauboxError;
 
-use super::message::Message;
 use super::handle_response;
+use super::message::Message;
 
 #[derive(Debug, Serialize)]
 struct ScheduleWire {
@@ -114,7 +114,9 @@ impl PauboxClient {
         &self,
         source_tracking_id: &str,
     ) -> Result<ScheduledMessageStatus, PauboxError> {
-        let url = self.base_url.join(&format!("schedule/{source_tracking_id}"))?;
+        let url = self
+            .base_url
+            .join(&format!("schedule/{source_tracking_id}"))?;
 
         let resp = self
             .http
@@ -133,7 +135,9 @@ impl PauboxClient {
         source_tracking_id: &str,
         scheduled_at: &str,
     ) -> Result<RescheduleResponse, PauboxError> {
-        let url = self.base_url.join(&format!("schedule/{source_tracking_id}"))?;
+        let url = self
+            .base_url
+            .join(&format!("schedule/{source_tracking_id}"))?;
         let body = RescheduleWire {
             scheduled_at: scheduled_at.to_string(),
         };
@@ -155,7 +159,9 @@ impl PauboxClient {
         &self,
         source_tracking_id: &str,
     ) -> Result<CancelScheduledResponse, PauboxError> {
-        let url = self.base_url.join(&format!("schedule/{source_tracking_id}/cancel"))?;
+        let url = self
+            .base_url
+            .join(&format!("schedule/{source_tracking_id}/cancel"))?;
 
         let resp = self
             .http

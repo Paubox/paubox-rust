@@ -107,6 +107,7 @@ pub struct PauboxClientBuilder {
     api_key: Option<String>,
     base_url: Option<Url>,
     timeout: Option<std::time::Duration>,
+    http_client: Option<reqwest::Client>,
 }
 
 #[cfg(feature = "email")]
@@ -129,6 +130,12 @@ impl PauboxClientBuilder {
         self
     }
 
+    /// Provide a pre-configured [`reqwest::Client`].
+    pub fn http_client(mut self, client: reqwest::Client) -> Self {
+        self.http_client = Some(client);
+        self
+    }
+
     /// Consume the builder and produce a [`PauboxClient`].
     ///
     /// # Errors
@@ -144,11 +151,16 @@ impl PauboxClientBuilder {
         };
         ensure_trailing_slash(&mut base_url);
 
-        let mut builder = reqwest::Client::builder();
-        if let Some(t) = self.timeout {
-            builder = builder.timeout(t);
-        }
-        let http = builder.build().map_err(PauboxError::Request)?;
+        let http = match self.http_client {
+            Some(c) => c,
+            None => {
+                let mut builder = reqwest::Client::builder();
+                if let Some(t) = self.timeout {
+                    builder = builder.timeout(t);
+                }
+                builder.build().map_err(PauboxError::Request)?
+            }
+        };
 
         Ok(PauboxClient {
             api_key,

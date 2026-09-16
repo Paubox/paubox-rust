@@ -34,8 +34,8 @@ pub struct DnsRecord {
 #[derive(Debug, Clone, Deserialize)]
 pub struct Mailbox {
     pub id: i64,
-    #[serde(default)]
-    pub email: Option<String>,
+    #[serde(default, alias = "email")]
+    pub email_address: Option<String>,
     #[serde(default)]
     pub name: Option<String>,
     #[serde(default)]

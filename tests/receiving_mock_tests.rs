@@ -253,7 +253,7 @@ async fn list_receiving_mailboxes_happy_path() {
     assert_eq!(mailboxes.len(), 2);
     assert_eq!(mailboxes[0].id, 1);
     assert_eq!(
-        mailboxes[0].email.as_deref(),
+        mailboxes[0].email_address.as_deref(),
         Some("support@test.inbound.paubox.email")
     );
     assert_eq!(mailboxes[0].name.as_deref(), Some("support"));
@@ -300,7 +300,7 @@ async fn create_receiving_mailbox_happy_path() {
 
     assert_eq!(mailbox.id, 5);
     assert_eq!(
-        mailbox.email.as_deref(),
+        mailbox.email_address.as_deref(),
         Some("support@test.inbound.paubox.email")
     );
 }
@@ -375,7 +375,7 @@ async fn get_receiving_mailbox_happy_path() {
 
     assert_eq!(mailbox.id, 2);
     assert_eq!(
-        mailbox.email.as_deref(),
+        mailbox.email_address.as_deref(),
         Some("info@test.inbound.paubox.email")
     );
 }

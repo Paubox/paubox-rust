@@ -1,7 +1,8 @@
 pub mod types;
 
 pub use types::{
-    AttachmentMeta, DnsRecord, Mailbox, ReceivedEmail, ReceivedEmailList, ReceivingDomain,
+    AttachmentMeta, DnsRecord, EmailAddress, Mailbox, ReceivedEmail, ReceivedEmailList,
+    ReceivingDomain,
 };
 
 use serde::Deserialize;

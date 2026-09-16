@@ -57,20 +57,36 @@ pub struct ReceivedEmailList {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct EmailAddress {
+    #[serde(default)]
+    pub address: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct ReceivedEmail {
     pub email_id: String,
     #[serde(default)]
     pub subject: Option<String>,
     #[serde(default)]
-    pub from: Option<String>,
+    pub from: Option<Vec<EmailAddress>>,
     #[serde(default)]
-    pub to: Option<Vec<String>>,
+    pub to: Option<Vec<EmailAddress>>,
     #[serde(default)]
     pub received_at: Option<String>,
     #[serde(default)]
     pub body_text: Option<String>,
     #[serde(default)]
     pub body_html: Option<String>,
+    #[serde(default)]
+    pub has_attachment: Option<bool>,
+    #[serde(default)]
+    pub size: Option<i64>,
+    #[serde(default)]
+    pub spam: Option<bool>,
+    #[serde(default)]
+    pub domain: Option<String>,
     #[serde(default)]
     pub attachments: Vec<AttachmentMeta>,
 }

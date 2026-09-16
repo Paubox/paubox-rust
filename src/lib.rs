@@ -85,5 +85,8 @@ pub mod email;
 pub mod forms;
 
 #[cfg(feature = "email")]
+pub mod receiving;
+
+#[cfg(feature = "email")]
 pub use client::{PauboxClient, PauboxClientBuilder};
 pub use error::PauboxError;

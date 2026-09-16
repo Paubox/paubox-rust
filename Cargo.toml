@@ -1,6 +1,6 @@
 [package]
 name = "paubox"
-version = "1.1.0"
+version = "1.2.0"
 authors = ["Paubox, Inc."]
 edition = "2021"
 rust-version = "1.86"

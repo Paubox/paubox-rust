@@ -563,7 +563,11 @@ async fn get_received_email_happy_path() {
     assert_eq!(email.email_id, "ea001");
     assert_eq!(email.subject.as_deref(), Some("Test Email"));
     assert_eq!(
-        email.from.as_ref().and_then(|v| v.first()).and_then(|a| a.address.as_deref()),
+        email
+            .from
+            .as_ref()
+            .and_then(|v| v.first())
+            .and_then(|a| a.address.as_deref()),
         Some("sender@example.com")
     );
     assert_eq!(email.body_text.as_deref(), Some("Hello world"));

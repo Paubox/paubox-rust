@@ -32,6 +32,11 @@ impl PauboxClient {
     }
 
     /// Create a new webhook endpoint.
+    ///
+    /// Valid `events`: `api_mail_log_delivered`, `api_mail_log_opened`,
+    /// `api_mail_log_temporary_failure`, `api_mail_log_permanent_failure`.
+    /// Inbound-mail (`email.inbound.received`) subscriptions are created in the
+    /// Paubox Dashboard, not through this API.
     pub async fn create_webhook_endpoint(
         &self,
         target_url: &str,
@@ -77,6 +82,8 @@ impl PauboxClient {
     }
 
     /// Update an existing webhook endpoint.
+    ///
+    /// See [`PauboxClient::create_webhook_endpoint`] for the valid `events`.
     pub async fn update_webhook_endpoint(
         &self,
         id: i64,

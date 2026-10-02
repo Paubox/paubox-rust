@@ -1,8 +1,8 @@
 pub mod types;
 
 pub use types::{
-    AttachmentMeta, DnsRecord, EmailAddress, Mailbox, ReceivedEmail, ReceivedEmailList,
-    ReceivingDomain,
+    AttachmentMeta, DnsRecord, EmailAddress, EmailAuthentication, EmailHeader, Mailbox,
+    ReceivedEmail, ReceivedEmailList, ReceivingDomain,
 };
 
 use serde::Deserialize;
@@ -179,6 +179,10 @@ impl PauboxClient {
         handle_empty_response(resp).await
     }
 
+    /// List received emails.
+    ///
+    /// `limit` defaults to 25 (max 100). `after` and `before` take an
+    /// [`ReceivedEmail::email_id`] from a previous page.
     pub async fn list_received_emails(
         &self,
         limit: Option<u32>,
@@ -211,6 +215,8 @@ impl PauboxClient {
         handle_response::<ReceivedEmailList>(resp).await
     }
 
+    /// Get a received email by its Paubox email UUID
+    /// ([`ReceivedEmail::email_id`]).
     pub async fn get_received_email(&self, email_id: &str) -> Result<ReceivedEmail, PauboxError> {
         let url = self.base_url.join(&format!("receiving/{email_id}"))?;
 
@@ -226,14 +232,18 @@ impl PauboxClient {
         Ok(wrapper.data)
     }
 
+    /// Download an attachment's raw bytes.
+    ///
+    /// `attachment_id` is the Paubox attachment UUID ([`AttachmentMeta::id`]).
+    /// Mail-server blob ids are no longer accepted and return 404.
     pub async fn get_received_email_attachment(
         &self,
         email_id: &str,
-        blob_id: &str,
+        attachment_id: &str,
     ) -> Result<Vec<u8>, PauboxError> {
         let url = self
             .base_url
-            .join(&format!("receiving/{email_id}/attachments/{blob_id}"))?;
+            .join(&format!("receiving/{email_id}/attachments/{attachment_id}"))?;
 
         let resp = self
             .http

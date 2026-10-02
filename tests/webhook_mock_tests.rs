@@ -28,7 +28,7 @@ async fn list_webhook_endpoints_happy_path() {
                 {
                     "id": 1,
                     "target_url": "https://example.com/hook1",
-                    "events": ["inbound_mail_received"],
+                    "events": ["api_mail_log_permanent_failure"],
                     "active": true
                 },
                 {
@@ -51,7 +51,7 @@ async fn list_webhook_endpoints_happy_path() {
         endpoints[0].target_url.as_deref(),
         Some("https://example.com/hook1")
     );
-    assert_eq!(endpoints[0].events, vec!["inbound_mail_received"]);
+    assert_eq!(endpoints[0].events, vec!["api_mail_log_permanent_failure"]);
     assert_eq!(endpoints[0].active, Some(true));
     assert_eq!(endpoints[1].id, 2);
     assert_eq!(endpoints[1].active, Some(false));
@@ -105,7 +105,7 @@ async fn create_webhook_endpoint_happy_path() {
             "data": {
                 "id": 42,
                 "target_url": "https://example.com/webhooks/paubox",
-                "events": ["inbound_mail_received", "api_mail_log_delivered"],
+                "events": ["api_mail_log_delivered", "api_mail_log_temporary_failure"],
                 "active": true,
                 "signing_key": "whsec_abc123"
             }
@@ -117,7 +117,7 @@ async fn create_webhook_endpoint_happy_path() {
     let endpoint = client
         .create_webhook_endpoint(
             "https://example.com/webhooks/paubox",
-            &["inbound_mail_received", "api_mail_log_delivered"],
+            &["api_mail_log_delivered", "api_mail_log_temporary_failure"],
             Some("whsec_abc123"),
             Some(true),
         )
@@ -177,7 +177,7 @@ async fn create_webhook_endpoint_401() {
 
     let client = make_client(&server).await;
     let err = client
-        .create_webhook_endpoint("https://hook.test", &["inbound_mail_received"], None, None)
+        .create_webhook_endpoint("https://hook.test", &["api_mail_log_delivered"], None, None)
         .await
         .unwrap_err();
 
@@ -199,7 +199,7 @@ async fn get_webhook_endpoint_happy_path() {
             "data": {
                 "id": 42,
                 "target_url": "https://example.com/webhooks/paubox",
-                "events": ["inbound_mail_received"],
+                "events": ["api_mail_log_opened"],
                 "active": true,
                 "signing_key": "whsec_abc123",
                 "created_at": "2026-09-16T10:00:00.000Z",
@@ -217,7 +217,7 @@ async fn get_webhook_endpoint_happy_path() {
         endpoint.target_url.as_deref(),
         Some("https://example.com/webhooks/paubox")
     );
-    assert_eq!(endpoint.events, vec!["inbound_mail_received"]);
+    assert_eq!(endpoint.events, vec!["api_mail_log_opened"]);
     assert_eq!(endpoint.active, Some(true));
     assert_eq!(
         endpoint.created_at.as_deref(),

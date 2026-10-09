@@ -15,6 +15,12 @@ use crate::forms::FormsClient;
 const DEFAULT_EMAIL_BASE: &str = "https://api.paubox.com/v1/email/";
 #[cfg(feature = "forms")]
 const DEFAULT_FORMS_BASE: &str = "https://api.paubox.com/v1/forms";
+// The public gateway exposes only /v1/webhooks/endpoints and rewrites it onto
+// the service's own /v1/endpoints, so the producers' event-ingest route is not
+// reachable from here. The bare base is deliberately unrouted; every request
+// carries the /endpoints resource.
+#[cfg(feature = "webhooks")]
+const DEFAULT_WEBHOOKS_BASE: &str = "https://api.paubox.com/v1/webhooks";
 
 /// Client for the Paubox Email API.
 ///
@@ -195,3 +201,7 @@ pub(crate) fn env_required(name: &str) -> Result<String, PauboxError> {
 /// Default Forms base URL constant, re-exported for `FormsClient`.
 #[cfg(feature = "forms")]
 pub(crate) const FORMS_BASE_URL: &str = DEFAULT_FORMS_BASE;
+
+/// Default webhooks base URL constant, re-exported for `WebhooksClient`.
+#[cfg(feature = "webhooks")]
+pub(crate) const WEBHOOKS_BASE_URL: &str = DEFAULT_WEBHOOKS_BASE;

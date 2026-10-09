@@ -106,5 +106,14 @@ jobs:
 
       - name: Probe the base URLs the clients default to
         run: |
-          grep -hoE 'https://api\.paubox\.com[a-zA-Z0-9/_.-]*' src/client.rs \
-            | .github/scripts/route-check.sh
+          {
+            grep -hoE 'https://api\.paubox\.com[a-zA-Z0-9/_.-]*' src/client.rs \
+              | grep -v '/v1/webhooks'
+            # The webhooks base is probed with /endpoints appended. The gateway
+            # scopes its rule to that one resource so the producers' event-ingest
+            # route stays off the public host, which leaves the bare base
+            # unrouted by design — probing it directly would fail this check for
+            # a URL the client never requests on its own.
+            grep -hoE 'https://api\.paubox\.com/v1/webhooks[a-zA-Z0-9/_.-]*' src/client.rs \
+              | sed 's#$#/endpoints#'
+          } | .github/scripts/route-check.sh

@@ -17,9 +17,10 @@ categories = ["email", "api-bindings", "web-programming::http-client"]
 all-features = true
 
 [features]
-default = ["email", "forms"]
+default = ["email", "forms", "webhooks"]
 email = []
 forms = []
+webhooks = []
 
 [dependencies]
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }

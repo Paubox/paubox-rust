@@ -212,7 +212,7 @@ Accepts an already-encoded string.
 | `recipient` | `String` | Recipient email address |
 | `delivery_status` | `String` | e.g. `"delivered"`, `"bounced"`, `"pending"` |
 | `delivery_time` | `Option<String>` | ISO 8601 delivery timestamp; `None` if not yet delivered |
-| `opened_status` | `String` | `"opened"` or `"unopened"` |
+| `opened_status` | `String` | `"opened"`, or empty when not opened |
 | `opened_time` | `Option<String>` | ISO 8601 open timestamp; `None` if not yet opened |
 
 ### `ApiError`
@@ -281,7 +281,7 @@ Content-Type: application/json
 | `active` | `bool` | Whether the form is accepting submissions |
 | `signable` | `bool` | Whether the form supports electronic signatures |
 | `submission_count` | `u64` | Total submissions received |
-| `customer_id` | `u64` | Owning Paubox customer ID |
+| `customer_id` | `u64` | Owning Paubox customer ID; `0` from `get_form` (the public endpoint omits it) |
 | `created_at` | `String` | ISO 8601 creation timestamp |
 | `updated_at` | `String` | ISO 8601 last-updated timestamp |
 

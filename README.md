@@ -169,7 +169,7 @@ See [`api.md`](api.md) for full documentation of all types, methods, and fields.
 
 ## MSRV
 
-Rust 1.86 or later.
+Rust 1.88 or later.
 
 ## License
 

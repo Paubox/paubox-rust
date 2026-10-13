@@ -14,6 +14,13 @@ struct DataWrapper<T> {
     data: T,
 }
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum ListWire {
+    Bare(Vec<WebhookEndpoint>),
+    Wrapped(DataWrapper<Vec<WebhookEndpoint>>),
+}
+
 impl PauboxClient {
     /// List all webhook endpoints.
     pub async fn list_webhook_endpoints(&self) -> Result<Vec<WebhookEndpoint>, PauboxError> {
@@ -27,8 +34,9 @@ impl PauboxClient {
             .send()
             .await?;
 
-        let wrapper = handle_response::<DataWrapper<Vec<WebhookEndpoint>>>(resp).await?;
-        Ok(wrapper.data)
+        Ok(match handle_response::<ListWire>(resp).await? {
+            ListWire::Bare(list) | ListWire::Wrapped(DataWrapper { data: list }) => list,
+        })
     }
 
     /// Create a new webhook endpoint.

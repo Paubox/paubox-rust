@@ -37,7 +37,9 @@ pub struct Form {
     /// Total number of submissions received so far.
     pub submission_count: u64,
 
-    /// ID of the Paubox customer account that owns this form.
+    /// ID of the Paubox customer account that owns this form. The public
+    /// endpoint used by `get_form` does not return it, so it is `0` there.
+    #[serde(default)]
     pub customer_id: u64,
 
     /// ISO 8601 timestamp when the form was created.

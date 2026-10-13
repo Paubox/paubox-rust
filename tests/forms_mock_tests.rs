@@ -24,6 +24,7 @@ async fn make_client(server: &MockServer) -> FormsClient {
 // get_form — happy path
 // ---------------------------------------------------------------------------
 
+// pb_rforms v1.13.2 `get_public_form` returns `PublicForm`, which has no `customer_id`.
 #[tokio::test]
 async fn get_form_parses_response() {
     let server = MockServer::start().await;
@@ -37,10 +38,14 @@ async fn get_form_parses_response() {
             "form_html": "<form>...</form>",
             "form_json": {"fields": ["first_name", "last_name"]},
             "form_css": "body { font-family: sans-serif; }",
-            "active": true,
+            "vanity_url": null,
+            "version": 3,
             "signable": false,
+            "signature_confirmation_label": null,
+            "type": "form",
+            "active": true,
+            "archived": false,
             "submission_count": 42,
-            "customer_id": 1,
             "created_at": "2024-01-01T00:00:00Z",
             "updated_at": "2024-06-01T00:00:00Z"
         })))
@@ -56,6 +61,7 @@ async fn get_form_parses_response() {
     assert!(form.active);
     assert!(!form.signable);
     assert_eq!(form.submission_count, 42);
+    assert_eq!(form.customer_id, 0);
 }
 
 // ---------------------------------------------------------------------------

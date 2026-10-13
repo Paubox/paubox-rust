@@ -211,6 +211,64 @@ async fn get_email_disposition_empty_timestamps_become_none() {
     assert!(d.opened_time.is_none());
 }
 
+// pb_email_api `receipt_delivery_status`: `"openedStatus": log.opened_at.map(|_| "opened")`.
+#[tokio::test]
+async fn get_email_disposition_delivered_unopened_has_null_opened_status() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/message_receipt"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "sourceTrackingId": "track-abc",
+            "data": {
+                "message": {
+                    "id": "<msg-3@example.com>",
+                    "message_deliveries": [
+                        {
+                            "recipient": "r@example.com",
+                            "status": {
+                                "deliveryStatus": "delivered",
+                                "deliveryTime": "Mon, 15 Jan 2024 10:00:00 +0000",
+                                "openedStatus": null,
+                                "openedTime": null
+                            }
+                        },
+                        {
+                            "recipient": "b@example.com",
+                            "status": {
+                                "deliveryStatus": "hard bounced",
+                                "deliveryTime": null
+                            }
+                        }
+                    ]
+                }
+            }
+        })))
+        .mount(&server)
+        .await;
+
+    let client = make_client(&server).await;
+    let resp = client.get_email_disposition("track-abc").await.unwrap();
+
+    let d = &resp.message_deliveries[0];
+    assert_eq!(d.delivery_status, "delivered");
+    assert_eq!(d.opened_status, "");
+    assert!(d.opened_time.is_none());
+    assert_eq!(resp.message_deliveries[1].opened_status, "");
+    assert!(resp.message_deliveries[1].delivery_time.is_none());
+}
+
+#[test]
+fn message_delivery_deserializes_null_opened_status() {
+    let d: paubox::email::MessageDelivery = serde_json::from_value(serde_json::json!({
+        "recipient": "r@example.com",
+        "deliveryStatus": "delivered",
+        "openedStatus": null
+    }))
+    .unwrap();
+    assert_eq!(d.opened_status, "");
+}
+
 // ---------------------------------------------------------------------------
 // Message builder — validation
 // ---------------------------------------------------------------------------

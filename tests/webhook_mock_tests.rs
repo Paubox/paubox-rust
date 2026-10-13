@@ -16,6 +16,24 @@ async fn make_client(server: &MockServer) -> PauboxClient {
 // list_webhook_endpoints
 // ---------------------------------------------------------------------------
 
+fn webhook_list() -> serde_json::Value {
+    serde_json::json!([
+        {
+            "id": 1,
+            "target_url": "https://example.com/hook1",
+            "events": ["api_mail_log_permanent_failure"],
+            "active": true
+        },
+        {
+            "id": 2,
+            "target_url": "https://example.com/hook2",
+            "events": ["api_mail_log_delivered", "api_mail_log_opened"],
+            "active": false
+        }
+    ])
+}
+
+// pb_email_api `webhook_endpoints::index` returns a bare array when no page/items are sent.
 #[tokio::test]
 async fn list_webhook_endpoints_happy_path() {
     let server = MockServer::start().await;
@@ -23,22 +41,7 @@ async fn list_webhook_endpoints_happy_path() {
     Mock::given(method("GET"))
         .and(path("/v1/webhook_endpoints"))
         .and(header("Authorization", "Token token=test-key"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-            "data": [
-                {
-                    "id": 1,
-                    "target_url": "https://example.com/hook1",
-                    "events": ["api_mail_log_permanent_failure"],
-                    "active": true
-                },
-                {
-                    "id": 2,
-                    "target_url": "https://example.com/hook2",
-                    "events": ["api_mail_log_delivered", "api_mail_log_opened"],
-                    "active": false
-                }
-            ]
-        })))
+        .respond_with(ResponseTemplate::new(200).set_body_json(webhook_list()))
         .mount(&server)
         .await;
 
@@ -55,6 +58,26 @@ async fn list_webhook_endpoints_happy_path() {
     assert_eq!(endpoints[0].active, Some(true));
     assert_eq!(endpoints[1].id, 2);
     assert_eq!(endpoints[1].active, Some(false));
+}
+
+#[tokio::test]
+async fn list_webhook_endpoints_accepts_paged_envelope() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/webhook_endpoints"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "data": webhook_list(),
+            "page_info": {"page": 1, "items": 25, "total": 2}
+        })))
+        .mount(&server)
+        .await;
+
+    let client = make_client(&server).await;
+    let endpoints = client.list_webhook_endpoints().await.unwrap();
+
+    assert_eq!(endpoints.len(), 2);
+    assert_eq!(endpoints[1].id, 2);
 }
 
 #[tokio::test]

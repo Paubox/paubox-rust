@@ -58,8 +58,9 @@ pub struct MessageDelivery {
     )]
     pub delivery_time: Option<String>,
 
-    /// Open status: `"opened"` or `"unopened"`.
-    #[serde(rename = "openedStatus", default)]
+    /// Open status: `"opened"`, or empty when the message has not been opened
+    /// or the delivery status has no open tracking.
+    #[serde(rename = "openedStatus", default, deserialize_with = "null_as_empty")]
     pub opened_status: String,
 
     /// ISO 8601 open timestamp, or `None` if not yet opened.
@@ -96,6 +97,14 @@ where
 {
     let s: Option<String> = Option::deserialize(d)?;
     Ok(s.filter(|v| !v.is_empty()))
+}
+
+/// The API sends `"openedStatus": null` until a delivered message is opened.
+fn null_as_empty<'de, D>(d: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(Option::<String>::deserialize(d)?.unwrap_or_default())
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +148,7 @@ pub(crate) struct DeliveryStatusWire {
         deserialize_with = "empty_string_as_none"
     )]
     pub delivery_time: Option<String>,
-    #[serde(rename = "openedStatus", default)]
+    #[serde(rename = "openedStatus", default, deserialize_with = "null_as_empty")]
     pub opened_status: String,
     #[serde(
         rename = "openedTime",

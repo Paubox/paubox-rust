@@ -13,7 +13,7 @@ rustup update stable
 cargo build --all-features
 ```
 
-MSRV is **Rust 1.86**. No external services are needed to run the test suite — all tests use mocked HTTP via `wiremock`.
+MSRV is **Rust 1.88**. No external services are needed to run the test suite — all tests use mocked HTTP via `wiremock`.
 
 ## Running tests
 

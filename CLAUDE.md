@@ -2,7 +2,7 @@
 
 ## Toolchain
 
-- **MSRV:** Rust 1.86
+- **MSRV:** Rust 1.88
 - **Edition:** 2021
 - Install: `rustup update stable`
 

@@ -372,6 +372,24 @@ Authenticates with a **scoped API key** sent as `Authorization: Bearer <key>` â€
 
 Which events a key may subscribe to is decided by its scopes: an event it is not scoped for is refused with `403`, an unrecognised one with `422`.
 
+**Available events**
+
+| Event | Fires when |
+| --- | --- |
+| `forms.submission.created` | A form submission is received |
+| `api_mail_log_delivered` | An Email API message is delivered |
+| `api_mail_log_opened` | A delivered message is opened |
+| `api_mail_log_temporary_failure` | Delivery fails temporarily |
+| `api_mail_log_permanent_failure` | Delivery fails permanently |
+| `email.inbound.received` | Inbound mail is received |
+
+The four Email API events keep their legacy `api_mail_log_` names, so a receiver written
+against the old Email API webhooks keeps working unchanged. Note these are the names on
+the wire: `delivered` or `failed` on their own are rejected as unknown.
+
+The SDK does not check these names. The catalog lives in the service, so an event added
+later works here without upgrading the SDK.
+
 > **Breaking change in 2.0.** These five methods previously hung off `PauboxClient`, targeted the legacy Email API at `/v1/email/webhook_endpoints`, and took **`i64`** ids. They now live on `WebhooksClient`, target the webhooks service, and take **UUID `&str`** ids. `WebhookEndpoint` changed shape with the service: `active: Option<bool>` became `status: String`, and `signing_key`/`api_key` are gone. The module also moved from the `email` feature to its own `webhooks` feature, because the service carries Forms events too and is no longer email-specific.
 
 ### Constructors

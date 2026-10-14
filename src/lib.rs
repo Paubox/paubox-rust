@@ -70,9 +70,9 @@
 //! let client = PauboxClient::from_env().expect("credentials not set");
 //! ```
 
-#[cfg(not(any(feature = "email", feature = "forms")))]
+#[cfg(not(any(feature = "email", feature = "forms", feature = "webhooks")))]
 compile_error!(
-    "the `paubox` crate requires at least one of the `email` or `forms` features to be enabled"
+    "the `paubox` crate requires at least one of the `email`, `forms` or `webhooks` features to be enabled"
 );
 
 pub mod client;
@@ -87,7 +87,11 @@ pub mod forms;
 #[cfg(feature = "email")]
 pub mod receiving;
 
-#[cfg(feature = "email")]
+// Was gated on `email`, when these methods hung off PauboxClient and targeted
+// the Email API. The service they now talk to is product-neutral — it carries
+// Forms events as well — so it gets its own feature rather than riding on one
+// product's.
+#[cfg(feature = "webhooks")]
 pub mod webhooks;
 
 #[cfg(feature = "email")]

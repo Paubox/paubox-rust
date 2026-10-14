@@ -163,6 +163,87 @@ If you already have a `PauboxClient`, you can reuse its connection pool:
 let forms = client.forms(); // reuses the underlying reqwest::Client
 ```
 
+## Webhooks
+
+A webhook endpoint is a URL you own that Paubox notifies when something happens. `WebhooksClient` manages those subscriptions: which URL to notify, and for which events.
+
+Unlike `FormsClient`, every method here needs a **scoped API key**, sent as `Authorization: Bearer <key>`:
+
+```rust
+use paubox::webhooks::WebhooksClient;
+
+let client = WebhooksClient::new(std::env::var("PAUBOX_WEBHOOKS_API_KEY")?);
+```
+
+Which events a key may subscribe to follows from its scopes. The SDK does not inspect them — the service refuses an event the key isn't scoped for with 403, and an unrecognised event with 422.
+
+**Available events**
+
+| Event | Fires when |
+| --- | --- |
+| `forms.submission.created` | A form submission is received |
+| `api_mail_log_delivered` | An Email API message is delivered |
+| `api_mail_log_opened` | A delivered message is opened |
+| `api_mail_log_temporary_failure` | Delivery fails temporarily |
+| `api_mail_log_permanent_failure` | Delivery fails permanently |
+| `email.inbound.received` | Inbound mail is received |
+
+The four Email API events keep their legacy `api_mail_log_` names, so a receiver written
+against the old Email API webhooks keeps working unchanged. Note these are the names on
+the wire: `delivered` or `failed` on their own are rejected as unknown.
+
+The SDK does not check these names. The catalog lives in the service, so an event added
+later works here without upgrading the SDK.
+
+### Subscribe a URL to an event
+
+```rust
+let created = client
+    .create_webhook_endpoint("https://example.com/paubox-webhook", &["forms.submission.created"])
+    .await?;
+
+println!("{}", created.endpoint.id);    // UUID
+println!("{}", created.signing_secret); // whsec_... — store this now
+```
+
+The endpoint itself is a flattened field, so its properties are reached through `created.endpoint`; `signing_secret` sits beside it.
+
+`signing_secret` is on `CreatedWebhookEndpoint` and no other type, because the service returns it once and never again. There is no way to read it back: recovering from a lost secret means deleting the endpoint and creating another. Use it to verify that deliveries really came from Paubox.
+
+### List, fetch, update and delete
+
+```rust
+use paubox::webhooks::{ListWebhookEndpointsParams, UpdateWebhookEndpoint};
+
+let list = client
+    .list_webhook_endpoints(&ListWebhookEndpointsParams::default())
+    .await?;
+
+for endpoint in &list.data {
+    println!("{} {} {}", endpoint.id, endpoint.target_url, endpoint.status);
+}
+println!("{}", list.page_info.count); // total matching, not the length of data
+
+let endpoint = client.get_webhook_endpoint(&created.endpoint.id).await?;
+
+let updated = client
+    .update_webhook_endpoint(
+        &created.endpoint.id,
+        UpdateWebhookEndpoint { status: Some("disabled".into()), ..Default::default() },
+    )
+    .await?;
+
+client.delete_webhook_endpoint(&created.endpoint.id).await?;
+```
+
+Only the fields set on `UpdateWebhookEndpoint` are sent, so changing the status leaves the URL and events alone. Pausing deliveries without losing the subscription is what `"disabled"` is for; set `"active"` to resume. Setting `events` replaces the list rather than adding to it. Delete returns `()` — the service answers 204 with no body — and takes the signing secret with it.
+
+Set `page` and `items` on `ListWebhookEndpointsParams` to paginate.
+
+### Webhook errors
+
+Failures are the same `PauboxError` the rest of the SDK returns, with the service's `{"message": "..."}` promoted onto it rather than a bare status. Subscribing a `target_url` that already has an endpoint is a 422, and an id belonging to another account is a 404 rather than a 403 — so one account cannot probe another's for existence. An id that is not UUID-shaped is rejected as `PauboxError::Validation` before any request is sent.
+
 ## API reference
 
 See [`api.md`](api.md) for full documentation of all types, methods, and fields.

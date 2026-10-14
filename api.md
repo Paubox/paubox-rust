@@ -2,18 +2,26 @@
 
 ## Overview
 
-The SDK exposes two independent clients and shared error/helper types:
+The SDK exposes three independent clients and shared error/helper types:
 
 | Type | Module | Auth required | API Base URL |
 |------|--------|:-------------:|--------------|
 | `PauboxClient` | `paubox` | Yes — `Token token=<key>` | `https://api.paubox.com/v1/email/` |
 | `FormsClient` | `paubox::forms` | No | `https://api.paubox.com/v1/forms` |
+| `WebhooksClient` | `paubox::webhooks` | Yes — `Bearer <scoped key>` | `https://api.paubox.com/v1/webhooks` |
 
-Both clients are re-exported from the top-level `paubox` crate:
+All three are reachable from the top-level `paubox` crate:
 
 ```rust
 use paubox::{PauboxClient, PauboxError};
 use paubox::forms::FormsClient;
+use paubox::webhooks::WebhooksClient;
+```
+
+Each sits behind a cargo feature, all enabled by default:
+
+```toml
+paubox = { version = "2", default-features = false, features = ["webhooks"] }
 ```
 
 ---
@@ -351,3 +359,103 @@ match client.send_message(&msg).await {
     Err(e) => eprintln!("Unexpected error: {e}"),
 }
 ```
+
+---
+
+## `WebhooksClient`
+
+Manages webhook subscriptions: which URL Paubox notifies, for which events.
+
+Behind the `webhooks` cargo feature (on by default).
+
+Authenticates with a **scoped API key** sent as `Authorization: Bearer <key>` — the same scheme as Forms, and a different one from the Email API's `Token token=`. Every endpoint is authenticated, so unlike `FormsClient` there is no keyless mode.
+
+Which events a key may subscribe to is decided by its scopes: an event it is not scoped for is refused with `403`, an unrecognised one with `422`.
+
+**Available events**
+
+| Event | Fires when |
+| --- | --- |
+| `forms.submission.created` | A form submission is received |
+| `api_mail_log_delivered` | An Email API message is delivered |
+| `api_mail_log_opened` | A delivered message is opened |
+| `api_mail_log_temporary_failure` | Delivery fails temporarily |
+| `api_mail_log_permanent_failure` | Delivery fails permanently |
+| `email.inbound.received` | Inbound mail is received |
+
+The four Email API events keep their legacy `api_mail_log_` names, so a receiver written
+against the old Email API webhooks keeps working unchanged. Note these are the names on
+the wire: `delivered` or `failed` on their own are rejected as unknown.
+
+The SDK does not check these names. The catalog lives in the service, so an event added
+later works here without upgrading the SDK.
+
+> **Breaking change in 2.0.** These five methods previously hung off `PauboxClient`, targeted the legacy Email API at `/v1/email/webhook_endpoints`, and took **`i64`** ids. They now live on `WebhooksClient`, target the webhooks service, and take **UUID `&str`** ids. `WebhookEndpoint` changed shape with the service: `active: Option<bool>` became `status: String`, and `signing_key`/`api_key` are gone. The module also moved from the `email` feature to its own `webhooks` feature, because the service carries Forms events too and is no longer email-specific.
+
+### Constructors
+
+```rust
+WebhooksClient::new(api_key: impl Into<String>) -> Self
+WebhooksClient::with_base_url(api_key: impl Into<String>, base_url: Url) -> Self
+WebhooksClient::with_http(api_key: impl Into<String>, http: reqwest::Client) -> Self
+```
+
+`with_base_url` is for tests pointing at a mock server; `with_http` reuses an existing connection pool.
+
+### `list_webhook_endpoints(&ListWebhookEndpointsParams) -> Result<WebhookEndpointList, PauboxError>`
+
+Lists the endpoints this key can act on. Endpoints carrying an event the key is not scoped for are filtered out by the service.
+
+`WebhookEndpointList { data: Vec<WebhookEndpoint>, page_info: PageInfo }`.
+
+**`page_info.count` is the total number of matching endpoints, not the length of the returned page.**
+
+### `create_webhook_endpoint(target_url: &str, events: &[&str]) -> Result<CreatedWebhookEndpoint, PauboxError>`
+
+Subscribes a URL to one or more events. `target_url` must be an `https` URL resolving to a publicly routable address.
+
+```rust
+let created = client
+    .create_webhook_endpoint("https://hooks.example.com/paubox", &["forms.submission.created"])
+    .await?;
+println!("{}", created.signing_secret); // persist this now
+```
+
+`signing_secret` is returned **only here** — it is absent from `get_webhook_endpoint` and `list_webhook_endpoints`. A lost secret means replacing the endpoint.
+
+Event names are **not** validated client-side: the catalog is owned by the service and grows without a crate release.
+
+### `get_webhook_endpoint(id: &str) -> Result<WebhookEndpoint, PauboxError>`
+
+A malformed UUID and another tenant's id both return `404` with the same message — the service gives no existence oracle. A non-UUID `id` returns `PauboxError::Validation` before any request.
+
+### `update_webhook_endpoint(id: &str, changes: UpdateWebhookEndpoint) -> Result<WebhookEndpoint, PauboxError>`
+
+Partial update — only the fields set on `changes` are sent, so an update that moves `target_url` leaves `events` and `status` untouched.
+
+```rust
+client.update_webhook_endpoint(&id, UpdateWebhookEndpoint {
+    status: Some("disabled".to_string()),
+    ..Default::default()
+}).await?;
+```
+
+### `delete_webhook_endpoint(id: &str) -> Result<(), PauboxError>`
+
+Deletes the endpoint, stopping every event on it. The service answers `204` with no body.
+
+### Webhook types
+
+| Type | Notes |
+|---|---|
+| `WebhookEndpoint` | `id` (UUID `String`), `target_url`, `status` (`"active"`/`"disabled"`), `events`, `created_at`, `updated_at`. Timestamps are RFC 3339 with microsecond precision and a `+00:00` offset, kept as `String`. |
+| `CreatedWebhookEndpoint` | Flattens `WebhookEndpoint` and adds `signing_secret`. |
+| `UpdateWebhookEndpoint` | `target_url`, `status`, `events` — all `Option`, all skipped when `None`. |
+| `WebhookEndpointList` | `data` plus `page_info`. |
+| `ListWebhookEndpointsParams` | `page`, `items` — both `Option<u32>`. |
+
+### Webhook errors
+
+Failures carry the service's own `{"message": ...}` rather than an opaque status: `401` maps to `PauboxError::Auth`, everything else to `PauboxError::Http { status, body }` with `body` holding that message. Local id validation returns `PauboxError::Validation`.
+
+Note a duplicate `target_url` is **`422`, not `409`**.
